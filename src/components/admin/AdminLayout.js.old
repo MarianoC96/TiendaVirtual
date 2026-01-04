@@ -1,0 +1,536 @@
+import React, { useState } from "react";
+import {
+  Box,
+  Drawer,
+  AppBar,
+  Toolbar,
+  List,
+  Typography,
+  Divider,
+  IconButton,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Avatar,
+  Menu,
+  MenuItem,
+  Badge,
+  Chip,
+  useTheme,
+  useMediaQuery,
+  Container,
+  Paper,
+  Alert,
+} from "@mui/material";
+import {
+  Menu as MenuIcon,
+  Dashboard,
+  Inventory,
+  LocalOffer,
+  People,
+  Category,
+  ShoppingCart,
+  Assessment,
+  Settings,
+  Logout,
+  Notifications,
+  AccountCircle,
+  Warning,
+  TrendingUp,
+  Store,
+} from "@mui/icons-material";
+import { useNavigate, useLocation, Outlet } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import { getSystemAlerts } from "../../data/adminMockData";
+
+const drawerWidth = 280;
+
+const AdminLayout = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("lg"));
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user, logout, isAdmin } = useAuth();
+
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [notificationAnchor, setNotificationAnchor] = useState(null);
+
+  // Obtener alertas del sistema
+  const systemAlerts = getSystemAlerts();
+
+  // Verificar si el usuario es admin
+  if (!isAdmin()) {
+    return (
+      <Container maxWidth="sm" sx={{ mt: 8 }}>
+        <Paper sx={{ p: 4, textAlign: "center" }}>
+          <Warning color="error" sx={{ fontSize: 60, mb: 2 }} />
+          <Typography variant="h4" gutterBottom>
+            Acceso Denegado
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+            No tienes permisos para acceder al panel de administración.
+          </Typography>
+          <IconButton onClick={() => navigate("/")} color="primary">
+            Volver al inicio
+          </IconButton>
+        </Paper>
+      </Container>
+    );
+  }
+
+  const menuItems = [
+    {
+      text: "Dashboard",
+      icon: <Dashboard />,
+      path: "/admin",
+      color: theme.palette.primary.main,
+    },
+    {
+      text: "Productos",
+      icon: <Inventory />,
+      path: "/admin/productos",
+      color: theme.palette.secondary.main,
+    },
+    {
+      text: "Descuentos",
+      icon: <LocalOffer />,
+      path: "/admin/descuentos",
+      color: theme.palette.warning.main,
+    },
+    {
+      text: "Categorías",
+      icon: <Category />,
+      path: "/admin/categorias",
+      color: theme.palette.info.main,
+    },
+    {
+      text: "Usuarios",
+      icon: <People />,
+      path: "/admin/usuarios",
+      color: theme.palette.success.main,
+    },
+    {
+      text: "Pedidos",
+      icon: <ShoppingCart />,
+      path: "/admin/pedidos",
+      color: theme.palette.primary.dark,
+    },
+    {
+      text: "Reportes",
+      icon: <Assessment />,
+      path: "/admin/reportes",
+      color: theme.palette.secondary.dark,
+    },
+    {
+      text: "Configuración",
+      icon: <Settings />,
+      path: "/admin/configuracion",
+      color: theme.palette.grey[600],
+    },
+  ];
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
+  const handleMenuClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleNotificationClick = (event) => {
+    setNotificationAnchor(event.currentTarget);
+  };
+
+  const handleNotificationClose = () => {
+    setNotificationAnchor(null);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
+
+  const drawer = (
+    <Box sx={{ height: "100%" }}>
+      {/* Logo y título */}
+      <Box
+        sx={{
+          p: 3,
+          background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          gap: 2,
+        }}
+      >
+        <Box
+          sx={{
+            width: 40,
+            height: 40,
+            background: "rgba(255,255,255,0.2)",
+            borderRadius: "12px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backdropFilter: "blur(10px)",
+          }}
+        >
+          <Store sx={{ color: "white" }} />
+        </Box>
+        <Box>
+          <Typography variant="h6" sx={{ fontWeight: 700, fontSize: "1.1rem" }}>
+            Panel Admin
+          </Typography>
+          <Typography variant="caption" sx={{ opacity: 0.8 }}>
+            TiendaOnline
+          </Typography>
+        </Box>
+      </Box>
+
+      {/* Usuario actual */}
+      <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Avatar
+            src={user?.avatar}
+            alt={user?.name}
+            sx={{
+              width: 45,
+              height: 45,
+              border: 2,
+              borderColor: theme.palette.primary.main,
+            }}
+          />
+          <Box sx={{ flexGrow: 1 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+              {user?.name}
+            </Typography>
+            <Chip
+              label="Administrador"
+              size="small"
+              color="primary"
+              variant="outlined"
+              sx={{ fontSize: "0.7rem", height: 20 }}
+            />
+          </Box>
+        </Box>
+      </Box>
+
+      {/* Alertas rápidas */}
+      {systemAlerts.length > 0 && (
+        <Box sx={{ p: 2 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: "block" }}>
+            Alertas Activas
+          </Typography>
+          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+            <Chip
+              icon={<Warning />}
+              label={`${systemAlerts.filter(a => a.type === 'stock').length} Stock`}
+              size="small"
+              color="error"
+              variant="outlined"
+            />
+            <Chip
+              icon={<LocalOffer />}
+              label={`${systemAlerts.filter(a => a.type === 'discount').length} Descuentos`}
+              size="small"
+              color="warning"
+              variant="outlined"
+            />
+          </Box>
+        </Box>
+      )}
+
+      <Divider />
+
+      {/* Menú de navegación */}
+      <List sx={{ pt: 2, px: 1 }}>
+        {menuItems.map((item) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
+              <ListItemButton
+                onClick={() => navigate(item.path)}
+                sx={{
+                  borderRadius: 2,
+                  mx: 1,
+                  transition: "all 0.3s ease",
+                  backgroundColor: isActive ? `${item.color}15` : "transparent",
+                  "&:hover": {
+                    backgroundColor: `${item.color}10`,
+                    transform: "translateX(4px)",
+                  },
+                }}
+              >
+                <ListItemIcon
+                  sx={{
+                    color: isActive ? item.color : theme.palette.text.secondary,
+                    minWidth: 40,
+                  }}
+                >
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText
+                  primary={item.text}
+                  sx={{
+                    "& .MuiListItemText-primary": {
+                      fontSize: "0.95rem",
+                      fontWeight: isActive ? 600 : 400,
+                      color: isActive ? item.color : theme.palette.text.primary,
+                    },
+                  }}
+                />
+              </ListItemButton>
+            </ListItem>
+          );
+        })}
+      </List>
+
+      {/* Estadísticas rápidas */}
+      <Box sx={{ mt: "auto", p: 2, borderTop: 1, borderColor: "divider" }}>
+        <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: "block" }}>
+          Estado del Sistema
+        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+          <Box
+            sx={{
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              backgroundColor: theme.palette.success.main,
+            }}
+          />
+          <Typography variant="caption">Sistema Online</Typography>
+        </Box>
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Typography variant="caption" color="text.secondary">
+            Última actualización
+          </Typography>
+          <Typography variant="caption" sx={{ fontWeight: 500 }}>
+            Hace 2 min
+          </Typography>
+        </Box>
+      </Box>
+    </Box>
+  );
+
+  return (
+    <Box sx={{ display: "flex", minHeight: "100vh" }}>
+      {/* AppBar */}
+      <AppBar
+        position="fixed"
+        elevation={0}
+        sx={{
+          width: { lg: `calc(100% - ${drawerWidth}px)` },
+          ml: { lg: `${drawerWidth}px` },
+          backgroundColor: "white",
+          borderBottom: 1,
+          borderColor: "divider",
+          backdropFilter: "blur(10px)",
+        }}
+      >
+        <Toolbar>
+          <IconButton
+            color="inherit"
+            aria-label="abrir menú"
+            edge="start"
+            onClick={handleDrawerToggle}
+            sx={{ mr: 2, display: { lg: "none" }, color: "text.primary" }}
+          >
+            <MenuIcon />
+          </IconButton>
+
+          {/* Título de la página actual */}
+          <Box sx={{ flexGrow: 1 }}>
+            <Typography variant="h6" sx={{ color: "text.primary", fontWeight: 600 }}>
+              {menuItems.find(item => item.path === location.pathname)?.text || "Panel de Administración"}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Gestiona tu tienda online desde aquí
+            </Typography>
+          </Box>
+
+          {/* Iconos de acción */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            {/* Notificaciones */}
+            <IconButton
+              onClick={handleNotificationClick}
+              sx={{
+                color: "text.primary",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  backgroundColor: theme.palette.primary.main,
+                  color: "white",
+                },
+              }}
+            >
+              <Badge badgeContent={systemAlerts.length} color="error">
+                <Notifications />
+              </Badge>
+            </IconButton>
+
+            {/* Perfil de usuario */}
+            <IconButton onClick={handleMenuClick}>
+              <Avatar
+                src={user?.avatar}
+                alt={user?.name}
+                sx={{ width: 35, height: 35 }}
+              />
+            </IconButton>
+          </Box>
+        </Toolbar>
+      </AppBar>
+
+      {/* Drawer */}
+      <Box
+        component="nav"
+        sx={{ width: { lg: drawerWidth }, flexShrink: { lg: 0 } }}
+      >
+        <Drawer
+          variant="temporary"
+          open={mobileOpen}
+          onClose={handleDrawerToggle}
+          ModalProps={{ keepMounted: true }}
+          sx={{
+            display: { xs: "block", lg: "none" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: drawerWidth,
+            },
+          }}
+        >
+          {drawer}
+        </Drawer>
+        <Drawer
+          variant="permanent"
+          sx={{
+            display: { xs: "none", lg: "block" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: drawerWidth,
+              borderRight: 1,
+              borderColor: "divider",
+            },
+          }}
+          open
+        >
+          {drawer}
+        </Drawer>
+      </Box>
+
+      {/* Contenido principal */}
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          p: 3,
+          width: { lg: `calc(100% - ${drawerWidth}px)` },
+          mt: 8,
+          backgroundColor: "#fafafa",
+          minHeight: "calc(100vh - 64px)",
+        }}
+      >
+        <Outlet />
+      </Box>
+
+      {/* Menú del usuario */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: "0 8px 30px rgba(0,0,0,0.15)",
+            mt: 1,
+            minWidth: 200,
+          },
+        }}
+      >
+        <MenuItem onClick={() => { handleMenuClose(); navigate("/admin/perfil"); }}>
+          <ListItemIcon>
+            <AccountCircle />
+          </ListItemIcon>
+          Mi Perfil
+        </MenuItem>
+        <MenuItem onClick={() => { handleMenuClose(); navigate("/admin/configuracion"); }}>
+          <ListItemIcon>
+            <Settings />
+          </ListItemIcon>
+          Configuración
+        </MenuItem>
+        <Divider />
+        <MenuItem
+          onClick={() => { handleMenuClose(); handleLogout(); }}
+          sx={{ color: theme.palette.error.main }}
+        >
+          <ListItemIcon sx={{ color: theme.palette.error.main }}>
+            <Logout />
+          </ListItemIcon>
+          Cerrar Sesión
+        </MenuItem>
+      </Menu>
+
+      {/* Menú de notificaciones */}
+      <Menu
+        anchorEl={notificationAnchor}
+        open={Boolean(notificationAnchor)}
+        onClose={handleNotificationClose}
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: "0 8px 30px rgba(0,0,0,0.15)",
+            mt: 1,
+            maxWidth: 350,
+            width: 350,
+          },
+        }}
+      >
+        <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            Notificaciones
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {systemAlerts.length} alertas activas
+          </Typography>
+        </Box>
+
+        {systemAlerts.length === 0 ? (
+          <Box sx={{ p: 3, textAlign: "center" }}>
+            <Typography variant="body2" color="text.secondary">
+              No hay alertas pendientes
+            </Typography>
+          </Box>
+        ) : (
+          systemAlerts.slice(0, 5).map((alert) => (
+            <MenuItem key={alert.id} onClick={handleNotificationClose}>
+              <Box sx={{ width: "100%" }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                  <Warning
+                    sx={{
+                      fontSize: 16,
+                      color: alert.severity === "high" ? "error.main" : "warning.main",
+                    }}
+                  />
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                    {alert.title}
+                  </Typography>
+                </Box>
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                  {alert.message}
+                </Typography>
+              </Box>
+            </MenuItem>
+          ))
+        )}
+      </Menu>
+    </Box>
+  );
+};
+
+export default AdminLayout;
