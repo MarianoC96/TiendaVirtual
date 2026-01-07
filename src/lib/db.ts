@@ -14,14 +14,14 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 // Client-side Supabase client (uses anon key, respects RLS)
 export const supabase: SupabaseClient = createClient(
-  supabaseUrl || '',
-  supabaseAnonKey || ''
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder-key'
 );
 
 // Server-side Supabase client (uses service role, bypasses RLS)
 export const supabaseAdmin: SupabaseClient = createClient(
-  supabaseUrl || '',
-  supabaseServiceRoleKey || supabaseAnonKey || '',
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseServiceRoleKey || supabaseAnonKey || 'placeholder-key',
   {
     auth: {
       autoRefreshToken: false,
