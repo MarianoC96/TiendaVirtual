@@ -93,8 +93,13 @@ export default function AdminDiscountsPage() {
       return;
     }
 
-    if (!formData.target_id) {
+    if (formData.applies_to !== 'cart_value' && !formData.target_id) {
       setError('Debes seleccionar un producto o categoría');
+      return;
+    }
+
+    if (formData.applies_to === 'cart_value' && formData.target_id <= 0) {
+      setError('El valor mínimo del carrito debe ser mayor a 0');
       return;
     }
 
@@ -247,24 +252,44 @@ export default function AdminDiscountsPage() {
               >
                 <option value="product">Producto</option>
                 <option value="category">Categoría</option>
+                <option value="cart_value">Valor del Carrito</option>
               </select>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {formData.applies_to === 'product' ? 'Producto' : 'Categoría'}
-              </label>
-              <select
-                value={formData.target_id}
-                onChange={(e) => setFormData({ ...formData, target_id: parseInt(e.target.value) })}
-                required
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500"
-              >
-                <option value={0}>Seleccionar...</option>
-                {getTargetOptions().map(opt => (
-                  <option key={opt.id} value={opt.id}>{opt.name}</option>
-                ))}
-              </select>
-            </div>
+            {formData.applies_to === 'cart_value' ? (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Valor mínimo del carrito (S/)
+                </label>
+                <input
+                  type="number"
+                  value={formData.target_id}
+                  onChange={(e) => setFormData({ ...formData, target_id: parseFloat(e.target.value) || 0 })}
+                  required
+                  min="1"
+                  step="0.01"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500"
+                  placeholder="150.00"
+                />
+                <p className="text-xs text-gray-500 mt-1">El descuento se aplica si el carrito supera este valor</p>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {formData.applies_to === 'product' ? 'Producto' : 'Categoría'}
+                </label>
+                <select
+                  value={formData.target_id}
+                  onChange={(e) => setFormData({ ...formData, target_id: parseInt(e.target.value) })}
+                  required
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500"
+                >
+                  <option value={0}>Seleccionar...</option>
+                  {getTargetOptions().map(opt => (
+                    <option key={opt.id} value={opt.id}>{opt.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Inicio</label>
               <input
@@ -328,9 +353,11 @@ export default function AdminDiscountsPage() {
                     <div>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${discount.applies_to === 'product'
                           ? 'bg-blue-100 text-blue-700'
-                          : 'bg-purple-100 text-purple-700'
+                          : discount.applies_to === 'category'
+                            ? 'bg-purple-100 text-purple-700'
+                            : 'bg-emerald-100 text-emerald-700'
                         }`}>
-                        {discount.applies_to === 'product' ? 'Producto' : 'Categoría'}
+                        {discount.applies_to === 'product' ? 'Producto' : discount.applies_to === 'category' ? 'Categoría' : 'Carrito'}
                       </span>
                       <div className="text-sm text-gray-500 mt-1">{discount.target_name}</div>
                     </div>
@@ -356,8 +383,8 @@ export default function AdminDiscountsPage() {
                       <button
                         onClick={() => handleToggle(discount.id, discount.active)}
                         className={`px-3 py-1 rounded-lg text-sm ${discount.active
-                            ? 'text-amber-600 hover:bg-amber-50'
-                            : 'text-green-600 hover:bg-green-50'
+                          ? 'text-amber-600 hover:bg-amber-50'
+                          : 'text-green-600 hover:bg-green-50'
                           }`}
                       >
                         {discount.active ? 'Pausar' : 'Activar'}

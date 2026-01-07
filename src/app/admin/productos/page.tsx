@@ -7,29 +7,46 @@ interface Product {
   id: number;
   name: string;
   category: string;
+  category_id?: number;
   price: number;
   stock: number;
   is_featured: number;
   image_url?: string;
+  description?: string;
+  short_description?: string;
+}
+
+interface Category {
+  id: number;
+  name: string;
 }
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       try {
-        const res = await fetch('/api/products');
-        const data = await res.json();
-        setProducts(data);
+        const [productsRes, categoriesRes] = await Promise.all([
+          fetch('/api/products'),
+          fetch('/api/categories')
+        ]);
+        const productsData = await productsRes.json();
+        const categoriesData = await categoriesRes.json();
+        setProducts(productsData);
+        setCategories(categoriesData);
       } catch (error) {
-        console.error('Error fetching products:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchProducts();
+    fetchData();
   }, []);
 
   const handleDelete = async (id: number) => {
@@ -41,6 +58,71 @@ export default function AdminProductsPage() {
     } catch (error) {
       console.error('Error deleting product:', error);
     }
+  };
+
+  const handleEdit = async (product: Product) => {
+    try {
+      // Fetch full product details
+      const res = await fetch(`/api/products/${product.id}`);
+      const fullProduct = await res.json();
+      setEditingProduct({
+        ...product,
+        ...fullProduct,
+        category_id: fullProduct.category_id || categories.find(c => c.name === product.category)?.id
+      });
+      setShowModal(true);
+    } catch (error) {
+      console.error('Error fetching product details:', error);
+      // Fallback: use the product data we already have
+      setEditingProduct(product);
+      setShowModal(true);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!editingProduct) return;
+
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/admin/products/${editingProduct.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editingProduct.name,
+          category_id: editingProduct.category_id,
+          price: editingProduct.price,
+          stock: editingProduct.stock,
+          is_featured: editingProduct.is_featured,
+          description: editingProduct.description,
+          short_description: editingProduct.short_description,
+          image_url: editingProduct.image_url
+        })
+      });
+
+      if (res.ok) {
+        // Update product in list
+        const updatedCategory = categories.find(c => c.id === editingProduct.category_id);
+        setProducts(products.map(p =>
+          p.id === editingProduct.id
+            ? { ...editingProduct, category: updatedCategory?.name || editingProduct.category }
+            : p
+        ));
+        setShowModal(false);
+        setEditingProduct(null);
+      } else {
+        alert('Error al guardar los cambios');
+      }
+    } catch (error) {
+      console.error('Error saving product:', error);
+      alert('Error al guardar los cambios');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditingProduct(null);
   };
 
   if (loading) {
@@ -107,15 +189,15 @@ export default function AdminProductsPage() {
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex justify-end gap-2">
-                    <Link
-                      href={`/admin/productos/${product.id}`}
-                      className="px-3 py-1 text-blue-600 hover:bg-blue-50 rounded-lg text-sm"
+                    <button
+                      onClick={() => handleEdit(product)}
+                      className="px-3 py-1 text-blue-600 hover:bg-blue-50 rounded-lg text-sm cursor-pointer"
                     >
                       Editar
-                    </Link>
+                    </button>
                     <button
                       onClick={() => handleDelete(product.id)}
-                      className="px-3 py-1 text-red-600 hover:bg-red-50 rounded-lg text-sm"
+                      className="px-3 py-1 text-red-600 hover:bg-red-50 rounded-lg text-sm cursor-pointer"
                     >
                       Eliminar
                     </button>
@@ -126,6 +208,167 @@ export default function AdminProductsPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Modal de Edición */}
+      {showModal && editingProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Overlay */}
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={closeModal}
+          />
+
+          {/* Modal Content */}
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto m-4">
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-gray-900">Editar Producto</h2>
+              <button
+                onClick={closeModal}
+                className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {/* Nombre */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nombre del producto
+                </label>
+                <input
+                  type="text"
+                  value={editingProduct.name}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Categoría */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Categoría
+                </label>
+                <select
+                  value={editingProduct.category_id || ''}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, category_id: parseInt(e.target.value) })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                >
+                  <option value="">Seleccionar categoría</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Precio y Stock */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Precio (S/)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={editingProduct.price}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, price: parseFloat(e.target.value) || 0 })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Stock
+                  </label>
+                  <input
+                    type="number"
+                    value={editingProduct.stock}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, stock: parseInt(e.target.value) || 0 })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              {/* URL de Imagen */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  URL de la imagen
+                </label>
+                <input
+                  type="url"
+                  value={editingProduct.image_url || ''}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, image_url: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                  placeholder="https://ejemplo.com/imagen.jpg"
+                />
+              </div>
+
+              {/* Descripción corta */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Descripción corta
+                </label>
+                <input
+                  type="text"
+                  value={editingProduct.short_description || ''}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, short_description: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Descripción */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Descripción completa
+                </label>
+                <textarea
+                  value={editingProduct.description || ''}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })}
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent resize-none"
+                />
+              </div>
+
+              {/* Destacado */}
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="is_featured"
+                  checked={editingProduct.is_featured === 1}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, is_featured: e.target.checked ? 1 : 0 })}
+                  className="w-5 h-5 text-rose-600 border-gray-300 rounded focus:ring-rose-500"
+                />
+                <label htmlFor="is_featured" className="text-sm font-medium text-gray-700">
+                  Producto destacado ⭐
+                </label>
+              </div>
+            </div>
+
+            {/* Footer con botones */}
+            <div className="sticky bottom-0 bg-gray-50 border-t px-6 py-4 flex justify-end gap-3">
+              <button
+                onClick={closeModal}
+                className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="px-4 py-2 bg-rose-600 text-white rounded-xl hover:bg-rose-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {saving ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Guardando...
+                  </>
+                ) : (
+                  'Guardar cambios'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

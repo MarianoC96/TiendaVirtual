@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { ReactNode } from 'react';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import PromoBanner from "@/components/PromoBanner";
 
 export default function LayoutWrapper({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -18,6 +19,7 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
   return (
     <>
       <Header />
+      <PromoBanner />
       <main className="pt-16 lg:pt-20 min-h-screen">
         {children}
       </main>
@@ -25,3 +27,4 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
     </>
   );
 }
+

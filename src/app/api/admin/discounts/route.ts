@@ -12,7 +12,7 @@ export async function GET() {
 
     // Enrich with target names
     const enrichedDiscounts = await Promise.all(
-      (discounts || []).map(async (discount) => {
+      (discounts || []).map(async (discount: { applies_to: string; target_id: number; created_by: number | null }) => {
         let target_name = null;
         let creator_name = null;
 
@@ -30,6 +30,8 @@ export async function GET() {
             .eq('id', discount.target_id)
             .single();
           target_name = category?.name;
+        } else if (discount.applies_to === 'cart_value') {
+          target_name = `Carrito ≥ S/ ${discount.target_id}`;
         }
 
         if (discount.created_by) {
@@ -60,20 +62,23 @@ export async function POST(request: Request) {
     // TODO: Get user ID from session - for now use admin ID 1
     const createdBy = 1;
 
-    // Validate required fields
-    if (!name || !discount_type || !discount_value || !applies_to || !target_id) {
+    // Validate required fields - cart_value doesn't need target_id validation
+    if (!name || !discount_type || !discount_value || !applies_to) {
       return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 });
     }
 
     // Validate 80% max for percentage discounts
     if (discount_type === 'percentage' && discount_value > 80) {
-      return NextResponse.json({ 
-        error: 'El descuento porcentual no puede superar el 80%' 
+      return NextResponse.json({
+        error: 'El descuento porcentual no puede superar el 80%'
       }, { status: 400 });
     }
 
-    // Validate target exists
+    // Validate target exists (for product/category types)
     if (applies_to === 'product') {
+      if (!target_id) {
+        return NextResponse.json({ error: 'Debes seleccionar un producto' }, { status: 400 });
+      }
       const { data: product } = await db
         .from('products')
         .select('id')
@@ -83,6 +88,9 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Producto no encontrado' }, { status: 400 });
       }
     } else if (applies_to === 'category') {
+      if (!target_id) {
+        return NextResponse.json({ error: 'Debes seleccionar una categoría' }, { status: 400 });
+      }
       const { data: category } = await db
         .from('categories')
         .select('id')
@@ -90,6 +98,11 @@ export async function POST(request: Request) {
         .single();
       if (!category) {
         return NextResponse.json({ error: 'Categoría no encontrada' }, { status: 400 });
+      }
+    } else if (applies_to === 'cart_value') {
+      // For cart_value, target_id stores the minimum cart value
+      if (!target_id || target_id <= 0) {
+        return NextResponse.json({ error: 'El valor mínimo del carrito debe ser mayor a 0' }, { status: 400 });
       }
     }
 
@@ -111,9 +124,9 @@ export async function POST(request: Request) {
 
     if (error) throw error;
 
-    return NextResponse.json({ 
-      success: true, 
-      id: data?.id 
+    return NextResponse.json({
+      success: true,
+      id: data?.id
     });
   } catch (error) {
     console.error('Error creating discount:', error);

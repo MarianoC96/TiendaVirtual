@@ -11,6 +11,15 @@ interface Category {
   product_count: number;
 }
 
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  stock: number;
+  image_url: string | null;
+  is_featured: boolean;
+}
+
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,6 +32,11 @@ export default function AdminCategoriesPage() {
     slug: '',
     description: ''
   });
+
+  // Modal de productos
+  const [viewingCategory, setViewingCategory] = useState<Category | null>(null);
+  const [categoryProducts, setCategoryProducts] = useState<Product[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
 
   useEffect(() => {
     fetchCategories();
@@ -93,21 +107,24 @@ export default function AdminCategoriesPage() {
     setError('');
   };
 
-  const handleClone = async (id: number) => {
+  const handleViewProducts = async (category: Category) => {
+    setViewingCategory(category);
+    setLoadingProducts(true);
+    setCategoryProducts([]);
+
     try {
-      const res = await fetch(`/api/admin/categories/${id}/clone`, {
-        method: 'POST'
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        alert(data.error || 'Error al clonar');
-        return;
-      }
-
-      fetchCategories();
+      // Obtener todos los productos y filtrar por category_id
+      const res = await fetch('/api/products');
+      const data = await res.json();
+      const filtered = Array.isArray(data)
+        ? data.filter((p: Product & { category_id?: number }) => p.category_id === category.id)
+        : [];
+      setCategoryProducts(filtered);
     } catch (error) {
-      console.error('Error cloning category:', error);
+      console.error('Error fetching products:', error);
+      setCategoryProducts([]);
+    } finally {
+      setLoadingProducts(false);
     }
   };
 
@@ -152,7 +169,7 @@ export default function AdminCategoriesPage() {
         <h1 className="text-3xl font-bold text-gray-900">Categorías</h1>
         <button
           onClick={() => { resetForm(); setShowForm(!showForm); }}
-          className="px-4 py-2 bg-rose-600 text-white rounded-xl font-medium hover:bg-rose-700 transition-colors"
+          className="px-4 py-2 bg-rose-600 text-white rounded-xl font-medium hover:bg-rose-700 transition-colors cursor-pointer"
         >
           + Nueva Categoría
         </button>
@@ -200,7 +217,7 @@ export default function AdminCategoriesPage() {
                         key={icon}
                         type="button"
                         onClick={() => setFormData({ ...formData, icon })}
-                        className={`w-8 h-8 rounded hover:bg-gray-100 ${formData.icon === icon ? 'bg-rose-100' : ''}`}
+                        className={`w-8 h-8 rounded hover:bg-gray-100 cursor-pointer ${formData.icon === icon ? 'bg-rose-100' : ''}`}
                       >
                         {icon}
                       </button>
@@ -235,10 +252,10 @@ export default function AdminCategoriesPage() {
             </div>
 
             <div className="flex gap-2">
-              <button type="submit" className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700">
+              <button type="submit" className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 cursor-pointer">
                 {editingId ? 'Guardar Cambios' : 'Crear Categoría'}
               </button>
-              <button type="button" onClick={resetForm} className="px-4 py-2 border rounded-lg hover:bg-gray-50">
+              <button type="button" onClick={resetForm} className="px-4 py-2 border rounded-lg hover:bg-gray-50 cursor-pointer">
                 Cancelar
               </button>
             </div>
@@ -267,7 +284,11 @@ export default function AdminCategoriesPage() {
               </tr>
             ) : (
               categories.map((category) => (
-                <tr key={category.id} className="hover:bg-gray-50">
+                <tr
+                  key={category.id}
+                  className="hover:bg-rose-50 cursor-pointer transition-colors"
+                  onClick={() => handleViewProducts(category)}
+                >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <span className="text-3xl">{category.icon}</span>
@@ -280,31 +301,25 @@ export default function AdminCategoriesPage() {
                   </td>
                   <td className="px-6 py-4">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${category.product_count > 0
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'bg-gray-100 text-gray-500'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'bg-gray-100 text-gray-500'
                       }`}>
                       {category.product_count} producto{category.product_count !== 1 ? 's' : ''}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => handleEdit(category)}
-                        className="px-3 py-1 text-blue-600 hover:bg-blue-50 rounded-lg text-sm"
+                        className="px-3 py-1 text-blue-600 hover:bg-blue-50 rounded-lg text-sm cursor-pointer"
                       >
                         Editar
                       </button>
                       <button
-                        onClick={() => handleClone(category.id)}
-                        className="px-3 py-1 text-purple-600 hover:bg-purple-50 rounded-lg text-sm"
-                      >
-                        Clonar
-                      </button>
-                      <button
                         onClick={() => handleDelete(category.id, category.product_count)}
-                        className={`px-3 py-1 rounded-lg text-sm ${category.product_count > 0
-                            ? 'text-gray-400 cursor-not-allowed'
-                            : 'text-red-600 hover:bg-red-50'
+                        className={`px-3 py-1 rounded-lg text-sm cursor-pointer ${category.product_count > 0
+                          ? 'text-gray-400 cursor-not-allowed'
+                          : 'text-red-600 hover:bg-red-50'
                           }`}
                         disabled={category.product_count > 0}
                         title={category.product_count > 0 ? 'No se puede eliminar: tiene productos' : ''}
@@ -319,6 +334,93 @@ export default function AdminCategoriesPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Modal de Productos */}
+      {viewingCategory && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setViewingCategory(null)}
+          />
+
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden m-4">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-rose-500 to-rose-600 px-6 py-5 flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <span className="text-4xl">{viewingCategory.icon}</span>
+                <div>
+                  <h2 className="text-xl font-bold text-white">{viewingCategory.name}</h2>
+                  <p className="text-rose-100 text-sm">{viewingCategory.product_count} producto{viewingCategory.product_count !== 1 ? 's' : ''}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setViewingCategory(null)}
+                className="text-white/80 hover:text-white text-3xl leading-none cursor-pointer transition-colors"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              {loadingProducts ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-10 w-10 border-4 border-rose-600 border-t-transparent" />
+                </div>
+              ) : categoryProducts.length === 0 ? (
+                <div className="text-center py-12">
+                  <span className="text-5xl mb-4 block">📦</span>
+                  <h3 className="text-lg font-semibold text-gray-700 mb-2">Sin productos</h3>
+                  <p className="text-gray-500">Esta categoría aún no tiene productos.</p>
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+                  {categoryProducts.map((product) => (
+                    <div
+                      key={product.id}
+                      className="flex items-center gap-4 bg-gray-50 hover:bg-gray-100 rounded-xl p-4 transition-colors"
+                    >
+                      <div className="w-16 h-16 bg-white rounded-xl overflow-hidden flex-shrink-0 shadow-sm border">
+                        <img
+                          src={product.image_url || 'https://via.placeholder.com/64'}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-grow min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-gray-900 truncate">{product.name}</p>
+                          {product.is_featured && (
+                            <span className="text-amber-500" title="Destacado">⭐</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 mt-1">
+                          <span className="text-rose-600 font-bold">S/ {product.price.toFixed(2)}</span>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${product.stock < 10
+                            ? 'bg-red-100 text-red-700'
+                            : 'bg-green-100 text-green-700'
+                            }`}>
+                            Stock: {product.stock}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            {categoryProducts.length > 0 && (
+              <div className="border-t px-6 py-4 bg-gray-50">
+                <p className="text-sm text-gray-500 text-center">
+                  Mostrando {categoryProducts.length} producto{categoryProducts.length !== 1 ? 's' : ''}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
