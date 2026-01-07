@@ -16,7 +16,7 @@ interface Product {
   original_price?: number | null;
   discount_percentage?: number;
   discount_end_date?: string | null;
-  in_stock: number;
+  in_stock: number | boolean;
   stock: number;
   rating: number;
   review_count: number;
@@ -119,7 +119,8 @@ export default function ProductDetailPage() {
     );
   }
 
-  const isInStock = product.in_stock === 1;
+  // Fix stock check to be consistent with API response types
+  const isInStock = (typeof product.in_stock === 'number' ? product.in_stock === 1 : Boolean(product.in_stock)) && product.stock > 0;
   const finalPrice = product.discount_percentage && product.discount_percentage > 0
     ? product.price * (1 - product.discount_percentage / 100)
     : product.price;

@@ -14,7 +14,7 @@ interface Product {
   original_price?: number | null;
   discount_percentage?: number;
   discount_end_date?: string | null;
-  in_stock: number;
+  in_stock: number | boolean;
   stock: number;
   rating: number;
   review_count: number;
@@ -27,7 +27,8 @@ export default function ProductCard({ product }: { product: Product }) {
   const [timeRemaining, setTimeRemaining] = useState<ReturnType<typeof getRemainingTime>>(null);
 
   const inCartQuantity = getItemQuantity(product.id);
-  const isInStock = product.in_stock === 1;
+  // Fix stock check logic: handle both number (0/1) and boolean types
+  const isInStock = (typeof product.in_stock === 'number' ? product.in_stock === 1 : Boolean(product.in_stock)) && product.stock > 0;
   const finalPrice = product.discount_percentage && product.discount_percentage > 0
     ? product.price * (1 - product.discount_percentage / 100)
     : product.price;
@@ -91,8 +92,8 @@ export default function ProductCard({ product }: { product: Product }) {
             onClick={handleAddToCart}
             disabled={!isInStock}
             className={`absolute bottom-3 right-3 w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all ${isInStock
-                ? 'bg-rose-600 text-white hover:bg-rose-700 hover:scale-110'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              ? 'bg-rose-600 text-white hover:bg-rose-700 hover:scale-110'
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
           >
             {inCartQuantity > 0 ? (

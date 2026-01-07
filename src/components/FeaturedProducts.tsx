@@ -13,7 +13,7 @@ interface Product {
   original_price?: number | null;
   discount_percentage?: number;
   discount_end_date?: string | null;
-  in_stock: number;
+  in_stock: number | boolean;
   stock: number;
   rating: number;
   review_count: number;
@@ -29,8 +29,13 @@ export default function FeaturedProducts() {
     const fetchProducts = async () => {
       try {
         const res = await fetch('/api/products/best-selling');
+        if (!res.ok) throw new Error('Failed to fetch');
         const data = await res.json();
-        setProducts(data);
+        if (Array.isArray(data)) {
+          setProducts(data);
+        } else {
+          setProducts([]);
+        }
       } catch (error) {
         console.error('Error fetching products:', error);
       } finally {

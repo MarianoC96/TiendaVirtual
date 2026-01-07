@@ -13,7 +13,7 @@ interface Product {
   original_price?: number | null;
   discount_percentage?: number;
   discount_end_date?: string | null;
-  in_stock: number;
+  in_stock: number | boolean;
   stock: number;
   rating: number;
   review_count: number;
@@ -93,8 +93,8 @@ function ProductsContent() {
                 <button
                   onClick={() => setSelectedCategory(null)}
                   className={`w-full text-left px-4 py-2 rounded-xl transition-colors ${!selectedCategory
-                      ? 'bg-indigo-100 text-indigo-700 font-medium'
-                      : 'text-gray-600 hover:bg-gray-50'
+                    ? 'bg-indigo-100 text-indigo-700 font-medium'
+                    : 'text-gray-600 hover:bg-gray-50'
                     }`}
                 >
                   Todos
@@ -104,8 +104,8 @@ function ProductsContent() {
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.slug)}
                     className={`w-full text-left px-4 py-2 rounded-xl transition-colors flex items-center gap-2 ${selectedCategory === cat.slug
-                        ? 'bg-indigo-100 text-indigo-700 font-medium'
-                        : 'text-gray-600 hover:bg-gray-50'
+                      ? 'bg-indigo-100 text-indigo-700 font-medium'
+                      : 'text-gray-600 hover:bg-gray-50'
                       }`}
                   >
                     <span>{cat.icon}</span>
