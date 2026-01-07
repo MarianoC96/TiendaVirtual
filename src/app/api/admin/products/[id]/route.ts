@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
-import '@/lib/seed';
 
 export async function DELETE(
   request: Request,
@@ -11,13 +10,23 @@ export async function DELETE(
     const id = parseInt(idParam);
 
     // Check if product exists
-    const product = db.prepare('SELECT id FROM products WHERE id = ?').get(id);
-    if (!product) {
+    const { data: product, error: fetchError } = await db
+      .from('products')
+      .select('id')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !product) {
       return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
     }
 
     // Delete the product
-    db.prepare('DELETE FROM products WHERE id = ?').run(id);
+    const { error } = await db
+      .from('products')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -35,10 +44,6 @@ export async function PATCH(
     const id = parseInt(idParam);
     const body = await request.json();
 
-    // Build dynamic update query
-    const updates: string[] = [];
-    const values: (string | number | null)[] = [];
-
     const allowedFields = [
       'name', 'category', 'category_id', 'price', 'original_price', 
       'discount_percentage', 'discount_end_date', 'in_stock', 'stock',
@@ -46,19 +51,24 @@ export async function PATCH(
       'is_on_sale', 'customizable', 'product_type', 'template_image'
     ];
 
+    // Build update object with only allowed fields
+    const updates: Record<string, unknown> = {};
     for (const field of allowedFields) {
       if (body[field] !== undefined) {
-        updates.push(`${field} = ?`);
-        values.push(body[field]);
+        updates[field] = body[field];
       }
     }
 
-    if (updates.length === 0) {
+    if (Object.keys(updates).length === 0) {
       return NextResponse.json({ error: 'No hay campos para actualizar' }, { status: 400 });
     }
 
-    values.push(id);
-    db.prepare(`UPDATE products SET ${updates.join(', ')} WHERE id = ?`).run(...values);
+    const { error } = await db
+      .from('products')
+      .update(updates)
+      .eq('id', id);
+
+    if (error) throw error;
 
     return NextResponse.json({ success: true });
   } catch (error) {

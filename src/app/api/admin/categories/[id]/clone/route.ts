@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
-import '@/lib/seed';
 
 interface Category {
   id: number;
@@ -19,9 +18,13 @@ export async function POST(
     const id = parseInt(idParam);
 
     // Get original category
-    const original = db.prepare('SELECT * FROM categories WHERE id = ?').get(id) as Category | undefined;
+    const { data: original, error: fetchError } = await db
+      .from('categories')
+      .select('*')
+      .eq('id', id)
+      .single();
     
-    if (!original) {
+    if (fetchError || !original) {
       return NextResponse.json({ error: 'Categoría no encontrada' }, { status: 404 });
     }
 
@@ -31,19 +34,38 @@ export async function POST(
     
     // Ensure slug is unique
     let counter = 1;
-    while (db.prepare('SELECT id FROM categories WHERE slug = ?').get(newSlug)) {
-      newSlug = `${original.slug}-copia-${counter}`;
-      counter++;
+    let slugExists = true;
+    while (slugExists) {
+      const { data: existing } = await db
+        .from('categories')
+        .select('id')
+        .eq('slug', newSlug)
+        .single();
+      
+      if (!existing) {
+        slugExists = false;
+      } else {
+        newSlug = `${original.slug}-copia-${counter}`;
+        counter++;
+      }
     }
 
-    const result = db.prepare(`
-      INSERT INTO categories (name, icon, slug, description)
-      VALUES (?, ?, ?, ?)
-    `).run(newName, original.icon, newSlug, original.description);
+    const { data, error } = await db
+      .from('categories')
+      .insert({
+        name: newName,
+        icon: original.icon,
+        slug: newSlug,
+        description: original.description
+      })
+      .select('id')
+      .single();
+
+    if (error) throw error;
 
     return NextResponse.json({ 
       success: true, 
-      id: result.lastInsertRowid,
+      id: data?.id,
       name: newName,
       slug: newSlug
     });

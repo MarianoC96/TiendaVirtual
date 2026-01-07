@@ -10,15 +10,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Email y contraseña requeridos' }, { status: 400 });
     }
 
-    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email) as {
-      id: number;
-      email: string;
-      password_hash: string;
-      name: string;
-      role: string;
-    } | undefined;
+    const { data: user, error } = await db
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single();
 
-    if (!user) {
+    if (error || !user) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 401 });
     }
 

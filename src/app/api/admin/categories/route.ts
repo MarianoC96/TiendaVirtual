@@ -1,20 +1,28 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
-import '@/lib/seed';
 
 export async function GET() {
   try {
-    const categories = db.prepare(`
-      SELECT 
-        c.*,
-        COUNT(p.id) as product_count
-      FROM categories c
-      LEFT JOIN products p ON p.category_id = c.id
-      GROUP BY c.id
-      ORDER BY c.id
-    `).all();
+    const { data: categories, error } = await db
+      .from('categories')
+      .select('*')
+      .order('id');
 
-    return NextResponse.json(categories);
+    if (error) throw error;
+
+    // Get product counts for each category
+    const enrichedCategories = await Promise.all(
+      (categories || []).map(async (category) => {
+        const { count } = await db
+          .from('products')
+          .select('*', { count: 'exact', head: true })
+          .eq('category_id', category.id);
+        
+        return { ...category, product_count: count || 0 };
+      })
+    );
+
+    return NextResponse.json(enrichedCategories);
   } catch (error) {
     console.error('Error fetching categories:', error);
     return NextResponse.json({ error: 'Error del servidor' }, { status: 500 });
@@ -44,19 +52,32 @@ export async function POST(request: Request) {
     let slug = generateSlug(name);
     
     // Check if slug already exists and make unique
-    const existing = db.prepare('SELECT id FROM categories WHERE slug = ?').get(slug);
+    const { data: existing } = await db
+      .from('categories')
+      .select('id')
+      .eq('slug', slug)
+      .single();
+
     if (existing) {
       slug = `${slug}-${Date.now()}`;
     }
 
-    const result = db.prepare(`
-      INSERT INTO categories (name, icon, slug, description)
-      VALUES (?, ?, ?, ?)
-    `).run(name, icon, slug, description || null);
+    const { data, error } = await db
+      .from('categories')
+      .insert({
+        name,
+        icon,
+        slug,
+        description: description || null
+      })
+      .select('id')
+      .single();
+
+    if (error) throw error;
 
     return NextResponse.json({ 
       success: true, 
-      id: result.lastInsertRowid,
+      id: data?.id,
       slug 
     });
   } catch (error) {

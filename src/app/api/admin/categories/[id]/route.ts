@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
-import '@/lib/seed';
 
 export async function PATCH(
   request: Request,
@@ -12,38 +11,38 @@ export async function PATCH(
     const body = await request.json();
     const { name, icon, slug, description } = body;
 
-    // Build dynamic update query
-    const updates: string[] = [];
-    const values: (string | number)[] = [];
+    // Build update object
+    const updates: Record<string, string | null> = {};
 
-    if (name !== undefined) {
-      updates.push('name = ?');
-      values.push(name);
-    }
-    if (icon !== undefined) {
-      updates.push('icon = ?');
-      values.push(icon);
-    }
+    if (name !== undefined) updates.name = name;
+    if (icon !== undefined) updates.icon = icon;
+    if (description !== undefined) updates.description = description;
+
     if (slug !== undefined) {
       // Check slug uniqueness
-      const existing = db.prepare('SELECT id FROM categories WHERE slug = ? AND id != ?').get(slug, id);
+      const { data: existing } = await db
+        .from('categories')
+        .select('id')
+        .eq('slug', slug)
+        .neq('id', id)
+        .single();
+
       if (existing) {
         return NextResponse.json({ error: 'El slug ya existe' }, { status: 400 });
       }
-      updates.push('slug = ?');
-      values.push(slug);
-    }
-    if (description !== undefined) {
-      updates.push('description = ?');
-      values.push(description);
+      updates.slug = slug;
     }
 
-    if (updates.length === 0) {
+    if (Object.keys(updates).length === 0) {
       return NextResponse.json({ error: 'No hay campos para actualizar' }, { status: 400 });
     }
 
-    values.push(id);
-    db.prepare(`UPDATE categories SET ${updates.join(', ')} WHERE id = ?`).run(...values);
+    const { error } = await db
+      .from('categories')
+      .update(updates)
+      .eq('id', id);
+
+    if (error) throw error;
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -61,15 +60,23 @@ export async function DELETE(
     const id = parseInt(idParam);
 
     // Check if category has products
-    const productCount = db.prepare('SELECT COUNT(*) as count FROM products WHERE category_id = ?').get(id) as { count: number };
+    const { count: productCount } = await db
+      .from('products')
+      .select('*', { count: 'exact', head: true })
+      .eq('category_id', id);
     
-    if (productCount.count > 0) {
+    if (productCount && productCount > 0) {
       return NextResponse.json({ 
-        error: `No se puede eliminar: hay ${productCount.count} producto(s) en esta categoría` 
+        error: `No se puede eliminar: hay ${productCount} producto(s) en esta categoría` 
       }, { status: 400 });
     }
 
-    db.prepare('DELETE FROM categories WHERE id = ?').run(id);
+    const { error } = await db
+      .from('categories')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
 
     return NextResponse.json({ success: true });
   } catch (error) {

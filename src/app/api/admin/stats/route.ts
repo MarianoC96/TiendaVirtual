@@ -1,23 +1,48 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
-import '@/lib/seed';
 
 export async function GET() {
   try {
-    const totalProducts = (db.prepare('SELECT COUNT(*) as count FROM products').get() as { count: number }).count;
-    const totalOrders = (db.prepare('SELECT COUNT(*) as count FROM orders').get() as { count: number }).count;
-    const totalRevenue = (db.prepare('SELECT COALESCE(SUM(total), 0) as sum FROM orders').get() as { sum: number }).sum;
-    const totalCategories = (db.prepare('SELECT COUNT(*) as count FROM categories').get() as { count: number }).count;
-    const activeCoupons = (db.prepare('SELECT COUNT(*) as count FROM coupons WHERE active = 1').get() as { count: number }).count;
-    const lowStockProducts = (db.prepare('SELECT COUNT(*) as count FROM products WHERE stock < 10').get() as { count: number }).count;
+    // Get total products
+    const { count: totalProducts } = await db
+      .from('products')
+      .select('*', { count: 'exact', head: true });
+
+    // Get total orders
+    const { count: totalOrders } = await db
+      .from('orders')
+      .select('*', { count: 'exact', head: true });
+
+    // Get total revenue
+    const { data: revenueData } = await db
+      .from('orders')
+      .select('total');
+    const totalRevenue = revenueData?.reduce((sum, order) => sum + (order.total || 0), 0) || 0;
+
+    // Get total categories
+    const { count: totalCategories } = await db
+      .from('categories')
+      .select('*', { count: 'exact', head: true });
+
+    // Get active coupons
+    const { count: activeCoupons } = await db
+      .from('coupons')
+      .select('*', { count: 'exact', head: true })
+      .eq('active', true);
+
+    // Get low stock products
+    const { count: lowStockProducts } = await db
+      .from('products')
+      .select('*', { count: 'exact', head: true })
+      .lt('stock', 10);
 
     return NextResponse.json({
-      totalProducts,
-      totalOrders,
+      totalProducts: totalProducts || 0,
+      totalOrders: totalOrders || 0,
       totalRevenue,
-      totalCategories,
-      activeCoupons,
-      lowStockProducts
+      totalCategories: totalCategories || 0,
+      activeCoupons: activeCoupons || 0,
+      lowStockProducts: lowStockProducts || 0
     });
   } catch (error) {
     console.error('Error fetching stats:', error);

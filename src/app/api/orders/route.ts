@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
-import '@/lib/seed';
 
 interface OrderItem {
   product: {
     id: number;
     name: string;
     price: number;
+    customization?: unknown;
   };
   quantity: number;
 }
@@ -27,41 +27,73 @@ export async function POST(request: Request) {
     } = await request.json();
 
     // Create order
-    const result = db.prepare(`
-      INSERT INTO orders (
-        user_id, guest_email, guest_name, guest_phone, shipping_address, items_json, 
-        customization_json, subtotal, discount, total, coupon_code, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
-    `).run(
-      userId || null,
-      guestEmail || null,
-      guestName || null,
-      guestPhone || null,
-      shippingAddress || null,
-      JSON.stringify(items),
-      items.some((i: { product: { customization?: unknown } }) => i.product.customization) 
-        ? JSON.stringify(items.filter((i: { product: { customization?: unknown } }) => i.product.customization).map((i: { product: { customization?: unknown } }) => i.product.customization)) 
-        : null,
-      subtotal,
-      discount || 0,
-      total,
-      couponCode || null
-    );
+    const { data: order, error: orderError } = await db
+      .from('orders')
+      .insert({
+        user_id: userId || null,
+        guest_email: guestEmail || null,
+        guest_name: guestName || null,
+        guest_phone: guestPhone || null,
+        shipping_address: shippingAddress || null,
+        items_json: items,
+        customization_json: items.some((i: OrderItem) => i.product.customization) 
+          ? items.filter((i: OrderItem) => i.product.customization).map((i: OrderItem) => i.product.customization)
+          : null,
+        subtotal,
+        discount: discount || 0,
+        total,
+        coupon_code: couponCode || null,
+        status: 'pending'
+      })
+      .select('id')
+      .single();
+
+    if (orderError) throw orderError;
 
     // Reduce stock for each product
-    const updateStock = db.prepare('UPDATE products SET stock = stock - ?, total_sold = total_sold + ? WHERE id = ?');
     for (const item of items as OrderItem[]) {
-      updateStock.run(item.quantity, item.quantity, item.product.id);
+      await db.rpc('update_product_stock', {
+        p_id: item.product.id,
+        p_quantity: item.quantity
+      }).then(async () => {
+        // If RPC doesn't exist, use direct update
+        const { data: product } = await db
+          .from('products')
+          .select('stock, total_sold')
+          .eq('id', item.product.id)
+          .single();
+        
+        if (product) {
+          await db
+            .from('products')
+            .update({
+              stock: product.stock - item.quantity,
+              total_sold: product.total_sold + item.quantity
+            })
+            .eq('id', item.product.id);
+        }
+      });
     }
 
     // Update coupon uses if a coupon was used
     if (couponCode) {
-      db.prepare('UPDATE coupons SET uses = uses + 1 WHERE code = ?').run(couponCode);
+      const { data: coupon } = await db
+        .from('coupons')
+        .select('uses')
+        .eq('code', couponCode)
+        .single();
+      
+      if (coupon) {
+        await db
+          .from('coupons')
+          .update({ uses: coupon.uses + 1 })
+          .eq('code', couponCode);
+      }
     }
 
     return NextResponse.json({ 
       success: true, 
-      orderId: result.lastInsertRowid 
+      orderId: order?.id 
     });
   } catch (error) {
     console.error('Error creating order:', error);

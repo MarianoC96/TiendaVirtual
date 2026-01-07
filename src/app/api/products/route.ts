@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
-import '@/lib/seed';
 
 export async function GET(request: Request) {
   try {
@@ -8,31 +7,34 @@ export async function GET(request: Request) {
     const query = searchParams.get('q');
     const categoria = searchParams.get('categoria');
 
-    let sql = `
-      SELECT 
-        p.*,
-        c.name as category_name
-      FROM products p
-      LEFT JOIN categories c ON p.category_id = c.id
-      WHERE 1=1
-    `;
-    const params: (string | number)[] = [];
+    let supabaseQuery = db
+      .from('products')
+      .select(`
+        *,
+        categories!inner(name)
+      `)
+      .order('is_featured', { ascending: false })
+      .order('total_sold', { ascending: false });
 
     if (query) {
-      sql += ` AND (p.name LIKE ? OR p.description LIKE ?)`;
-      params.push(`%${query}%`, `%${query}%`);
+      supabaseQuery = supabaseQuery.or(`name.ilike.%${query}%,description.ilike.%${query}%`);
     }
 
     if (categoria) {
-      sql += ` AND p.category = ?`;
-      params.push(categoria);
+      supabaseQuery = supabaseQuery.eq('category', categoria);
     }
 
-    sql += ` ORDER BY p.is_featured DESC, p.total_sold DESC`;
+    const { data: products, error } = await supabaseQuery;
 
-    const products = db.prepare(sql).all(...params);
+    if (error) throw error;
 
-    return NextResponse.json(products);
+    // Transform to match expected format
+    const transformedProducts = products?.map(p => ({
+      ...p,
+      category_name: p.categories?.name
+    })) || [];
+
+    return NextResponse.json(transformedProducts);
   } catch (error) {
     console.error('Error fetching products:', error);
     return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });

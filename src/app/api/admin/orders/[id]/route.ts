@@ -17,33 +17,68 @@ export async function PATCH(
     const { status } = await request.json();
     
     // Get current order
-    const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id) as { status: string; items_json: string } | undefined;
+    const { data: order, error: orderError } = await db
+      .from('orders')
+      .select('*')
+      .eq('id', parseInt(id))
+      .single();
     
-    if (!order) {
+    if (orderError || !order) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
     const oldStatus = order.status;
-    const items: OrderItem[] = JSON.parse(order.items_json);
+    const items: OrderItem[] = order.items_json;
 
     // If cancelling an order that wasn't already cancelled, restore stock
     if (status === 'cancelled' && oldStatus !== 'cancelled') {
-      const restoreStock = db.prepare('UPDATE products SET stock = stock + ?, total_sold = total_sold - ? WHERE id = ?');
       for (const item of items) {
-        restoreStock.run(item.quantity, item.quantity, item.product.id);
+        const { data: product } = await db
+          .from('products')
+          .select('stock, total_sold')
+          .eq('id', item.product.id)
+          .single();
+        
+        if (product) {
+          await db
+            .from('products')
+            .update({
+              stock: product.stock + item.quantity,
+              total_sold: product.total_sold - item.quantity
+            })
+            .eq('id', item.product.id);
+        }
       }
     }
 
     // If un-cancelling an order (rare but possible), reduce stock again
     if (oldStatus === 'cancelled' && status !== 'cancelled') {
-      const reduceStock = db.prepare('UPDATE products SET stock = stock - ?, total_sold = total_sold + ? WHERE id = ?');
       for (const item of items) {
-        reduceStock.run(item.quantity, item.quantity, item.product.id);
+        const { data: product } = await db
+          .from('products')
+          .select('stock, total_sold')
+          .eq('id', item.product.id)
+          .single();
+        
+        if (product) {
+          await db
+            .from('products')
+            .update({
+              stock: product.stock - item.quantity,
+              total_sold: product.total_sold + item.quantity
+            })
+            .eq('id', item.product.id);
+        }
       }
     }
 
     // Update order status
-    db.prepare('UPDATE orders SET status = ? WHERE id = ?').run(status, id);
+    const { error: updateError } = await db
+      .from('orders')
+      .update({ status })
+      .eq('id', parseInt(id));
+
+    if (updateError) throw updateError;
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -58,9 +93,14 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
     
-    if (!order) {
+    const { data: order, error } = await db
+      .from('orders')
+      .select('*')
+      .eq('id', parseInt(id))
+      .single();
+    
+    if (error || !order) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 

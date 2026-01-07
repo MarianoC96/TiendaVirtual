@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
-import '@/lib/seed';
 
 export async function PATCH(
   request: Request,
@@ -12,11 +11,16 @@ export async function PATCH(
     const body = await request.json();
     const { active } = body;
 
-    if (typeof active !== 'number') {
+    if (typeof active !== 'boolean' && typeof active !== 'number') {
       return NextResponse.json({ error: 'Campo active requerido' }, { status: 400 });
     }
 
-    db.prepare('UPDATE discounts SET active = ? WHERE id = ?').run(active, id);
+    const { error } = await db
+      .from('discounts')
+      .update({ active: Boolean(active) })
+      .eq('id', id);
+
+    if (error) throw error;
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -32,7 +36,13 @@ export async function DELETE(
   try {
     const { id: idParam } = await params;
     const id = parseInt(idParam);
-    db.prepare('DELETE FROM discounts WHERE id = ?').run(id);
+
+    const { error } = await db
+      .from('discounts')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
 
     return NextResponse.json({ success: true });
   } catch (error) {

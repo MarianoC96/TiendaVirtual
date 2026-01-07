@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
-import '@/lib/seed';
 
 export async function POST(request: Request) {
   try {
@@ -10,21 +9,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Código requerido' }, { status: 400 });
     }
 
-    const coupon = db.prepare(`
-      SELECT * FROM coupons WHERE code = ? AND active = 1
-    `).get(code.toUpperCase()) as {
-      id: number;
-      code: string;
-      name: string;
-      discount_type: string;
-      discount_value: number;
-      min_purchase: number;
-      max_uses: number | null;
-      uses: number;
-      expires_at: string | null;
-    } | undefined;
+    const { data: coupon, error } = await db
+      .from('coupons')
+      .select('*')
+      .eq('code', code.toUpperCase())
+      .eq('active', true)
+      .single();
 
-    if (!coupon) {
+    if (error || !coupon) {
       return NextResponse.json({ error: 'Cupón no válido o expirado' }, { status: 400 });
     }
 

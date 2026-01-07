@@ -1,25 +1,51 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
-import '@/lib/seed';
 
 export async function GET() {
   try {
-    const discounts = db.prepare(`
-      SELECT 
-        d.*,
-        u.name as creator_name,
-        CASE 
-          WHEN d.applies_to = 'product' THEN p.name
-          WHEN d.applies_to = 'category' THEN c.name
-        END as target_name
-      FROM discounts d
-      LEFT JOIN users u ON d.created_by = u.id
-      LEFT JOIN products p ON d.applies_to = 'product' AND d.target_id = p.id
-      LEFT JOIN categories c ON d.applies_to = 'category' AND d.target_id = c.id
-      ORDER BY d.created_at DESC
-    `).all();
+    const { data: discounts, error } = await db
+      .from('discounts')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-    return NextResponse.json(discounts);
+    if (error) throw error;
+
+    // Enrich with target names
+    const enrichedDiscounts = await Promise.all(
+      (discounts || []).map(async (discount) => {
+        let target_name = null;
+        let creator_name = null;
+
+        if (discount.applies_to === 'product') {
+          const { data: product } = await db
+            .from('products')
+            .select('name')
+            .eq('id', discount.target_id)
+            .single();
+          target_name = product?.name;
+        } else if (discount.applies_to === 'category') {
+          const { data: category } = await db
+            .from('categories')
+            .select('name')
+            .eq('id', discount.target_id)
+            .single();
+          target_name = category?.name;
+        }
+
+        if (discount.created_by) {
+          const { data: creator } = await db
+            .from('users')
+            .select('name')
+            .eq('id', discount.created_by)
+            .single();
+          creator_name = creator?.name;
+        }
+
+        return { ...discount, target_name, creator_name };
+      })
+    );
+
+    return NextResponse.json(enrichedDiscounts);
   } catch (error) {
     console.error('Error fetching discounts:', error);
     return NextResponse.json({ error: 'Error del servidor' }, { status: 500 });
@@ -48,34 +74,46 @@ export async function POST(request: Request) {
 
     // Validate target exists
     if (applies_to === 'product') {
-      const product = db.prepare('SELECT id FROM products WHERE id = ?').get(target_id);
+      const { data: product } = await db
+        .from('products')
+        .select('id')
+        .eq('id', target_id)
+        .single();
       if (!product) {
         return NextResponse.json({ error: 'Producto no encontrado' }, { status: 400 });
       }
     } else if (applies_to === 'category') {
-      const category = db.prepare('SELECT id FROM categories WHERE id = ?').get(target_id);
+      const { data: category } = await db
+        .from('categories')
+        .select('id')
+        .eq('id', target_id)
+        .single();
       if (!category) {
         return NextResponse.json({ error: 'Categoría no encontrada' }, { status: 400 });
       }
     }
 
-    const result = db.prepare(`
-      INSERT INTO discounts (name, discount_type, discount_value, applies_to, target_id, start_date, end_date, created_by)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      name, 
-      discount_type, 
-      discount_value, 
-      applies_to, 
-      target_id, 
-      start_date || null, 
-      end_date || null, 
-      createdBy
-    );
+    const { data, error } = await db
+      .from('discounts')
+      .insert({
+        name,
+        discount_type,
+        discount_value,
+        applies_to,
+        target_id,
+        start_date: start_date || null,
+        end_date: end_date || null,
+        created_by: createdBy,
+        active: true
+      })
+      .select('id')
+      .single();
+
+    if (error) throw error;
 
     return NextResponse.json({ 
       success: true, 
-      id: result.lastInsertRowid 
+      id: data?.id 
     });
   } catch (error) {
     console.error('Error creating discount:', error);

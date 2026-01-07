@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
-import '@/lib/seed';
 
 export async function GET() {
   try {
-    const orders = db.prepare('SELECT * FROM orders ORDER BY id DESC').all();
+    const { data: orders, error } = await db
+      .from('orders')
+      .select('*')
+      .order('id', { ascending: false });
+
+    if (error) throw error;
+
     return NextResponse.json(orders);
   } catch (error) {
     console.error('Error fetching orders:', error);

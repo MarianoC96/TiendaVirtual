@@ -1,21 +1,27 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
-import '@/lib/seed';
 
 export async function GET() {
   try {
-    const products = db.prepare(`
-      SELECT 
-        p.*,
-        c.name as category_name
-      FROM products p
-      LEFT JOIN categories c ON p.category_id = c.id
-      WHERE p.is_featured = 1
-      ORDER BY p.total_sold DESC
-      LIMIT 10
-    `).all();
+    const { data: products, error } = await db
+      .from('products')
+      .select(`
+        *,
+        categories!inner(name)
+      `)
+      .eq('is_featured', true)
+      .order('total_sold', { ascending: false })
+      .limit(10);
 
-    return NextResponse.json(products);
+    if (error) throw error;
+
+    // Transform to match expected format
+    const transformedProducts = products?.map(p => ({
+      ...p,
+      category_name: p.categories?.name
+    })) || [];
+
+    return NextResponse.json(transformedProducts);
   } catch (error) {
     console.error('Error fetching products:', error);
     return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });

@@ -11,24 +11,33 @@ export async function POST(request: Request) {
     }
 
     // Check if user exists
-    const existingUser = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+    const { data: existingUser } = await db
+      .from('users')
+      .select('id')
+      .eq('email', email)
+      .single();
+
     if (existingUser) {
       return NextResponse.json({ error: 'El email ya está registrado' }, { status: 400 });
     }
 
     // Hash password and create user
     const hashedPassword = bcrypt.hashSync(password, 10);
-    const result = db.prepare(`
-      INSERT INTO users (email, password_hash, name, role) VALUES (?, ?, ?, 'client')
-    `).run(email, hashedPassword, name);
-
-    return NextResponse.json({
-      user: {
-        id: result.lastInsertRowid,
+    const { data: newUser, error } = await db
+      .from('users')
+      .insert({
         email,
+        password_hash: hashedPassword,
         name,
         role: 'client'
-      }
+      })
+      .select('id, email, name, role')
+      .single();
+
+    if (error) throw error;
+
+    return NextResponse.json({
+      user: newUser
     });
   } catch (error) {
     console.error('Register error:', error);
