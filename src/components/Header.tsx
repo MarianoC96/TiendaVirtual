@@ -79,8 +79,8 @@ export default function Header() {
     <>
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
-            ? 'bg-white/90 backdrop-blur-xl shadow-lg'
-            : 'bg-white shadow-sm'
+          ? 'bg-white/90 backdrop-blur-xl shadow-lg'
+          : 'bg-white shadow-sm'
           }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -137,7 +137,7 @@ export default function Header() {
                 )}
               </div>
 
-              <Link href="/productos?ofertas=true" className="px-4 py-2 text-gray-700 font-medium hover:text-rose-600 transition-colors">
+              <Link href="/ofertas" className="px-4 py-2 text-gray-700 font-medium hover:text-rose-600 transition-colors">
                 Ofertas
               </Link>
 
@@ -274,8 +274,11 @@ export default function Header() {
                   </Link>
                 ))}
               </div>
-              <Link href="/productos?ofertas=true" onClick={() => setShowMobileMenu(false)} className="block px-4 py-3 text-rose-600 font-medium hover:bg-rose-50 rounded-xl">
+              <Link href="/ofertas" onClick={() => setShowMobileMenu(false)} className="block px-4 py-3 text-rose-600 font-medium hover:bg-rose-50 rounded-xl">
                 🔥 Ofertas
+              </Link>
+              <Link href="/nosotros" onClick={() => setShowMobileMenu(false)} className="block px-4 py-3 text-gray-700 font-medium hover:bg-gray-50 rounded-xl">
+                👋 Nosotros
               </Link>
             </nav>
 

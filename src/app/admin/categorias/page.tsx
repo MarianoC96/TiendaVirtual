@@ -33,6 +33,13 @@ export default function AdminCategoriesPage() {
     description: ''
   });
 
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredCategories = categories.filter(category =>
+    category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    category.slug.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   // Modal de productos
   const [viewingCategory, setViewingCategory] = useState<Category | null>(null);
   const [categoryProducts, setCategoryProducts] = useState<Product[]>([]);
@@ -165,101 +172,151 @@ export default function AdminCategoriesPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Categorías</h1>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Categorías</h1>
+          <p className="text-gray-500 mt-1">Gestiona las categorías de tus productos</p>
+        </div>
         <button
-          onClick={() => { resetForm(); setShowForm(!showForm); }}
-          className="px-4 py-2 bg-rose-600 text-white rounded-xl font-medium hover:bg-rose-700 transition-colors cursor-pointer"
+          onClick={() => { resetForm(); setShowForm(true); }}
+          className="flex items-center gap-2 px-6 py-2.5 bg-rose-600 text-white rounded-xl font-medium hover:bg-rose-700 transition-colors shadow-sm hover:shadow-md cursor-pointer"
         >
-          + Nueva Categoría
+          <span className="text-xl leading-none">+</span> Nueva Categoría
         </button>
       </div>
 
-      {/* Create/Edit Form */}
+      {/* Search Bar */}
+      <div className="mb-6 relative">
+        <input
+          type="text"
+          placeholder="Buscar categoría por nombre..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 transition-all outline-none bg-white shadow-sm"
+        />
+        <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+
+      {/* Create/Edit Modal */}
       {showForm && (
-        <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">
-            {editingId ? 'Editar Categoría' : 'Crear Categoría'}
-          </h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+            onClick={() => setShowForm(false)}
+          />
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-              {error}
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-rose-500 to-rose-600 px-6 py-4 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <span>{editingId ? '✏️' : '✨'}</span>
+                {editingId ? 'Editar Categoría' : 'Nueva Categoría'}
+              </h2>
+              <button
+                onClick={() => setShowForm(false)}
+                className="text-white/80 hover:text-white text-2xl leading-none cursor-pointer w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
+              >
+                ×
+              </button>
             </div>
-          )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500"
-                  placeholder="Nombre de la categoría"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Icono</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={formData.icon}
-                    onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                    required
-                    className="w-20 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500 text-2xl text-center"
-                  />
-                  <div className="flex flex-wrap gap-1">
-                    {commonIcons.map((icon) => (
-                      <button
-                        key={icon}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, icon })}
-                        className={`w-8 h-8 rounded hover:bg-gray-100 cursor-pointer ${formData.icon === icon ? 'bg-rose-100' : ''}`}
-                      >
-                        {icon}
-                      </button>
-                    ))}
+            {/* Modal Body */}
+            <div className="p-6">
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 text-sm flex items-center gap-2">
+                  <span>⚠️</span> {error}
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Nombre de la Categoría</label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      required
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 transition-all outline-none"
+                      placeholder="Ej: Bebidas Calientes"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Icono o Emoji</label>
+                    <div className="flex gap-3">
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={formData.icon}
+                          onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
+                          required
+                          className="w-16 h-12 px-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 text-2xl text-center outline-none"
+                        />
+                      </div>
+                      <div className="flex-1 bg-gray-50 rounded-xl p-2 border border-gray-100 flex flex-wrap gap-1.5 h-12 overflow-y-auto">
+                        {commonIcons.map((icon) => (
+                          <button
+                            key={icon}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, icon })}
+                            className={`w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition-all cursor-pointer text-lg ${formData.icon === icon ? 'bg-white shadow-sm ring-1 ring-rose-200' : 'text-gray-500'}`}
+                          >
+                            {icon}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {editingId && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Slug (URL)</label>
+                      <div className="flex items-center">
+                        <span className="bg-gray-50 text-gray-500 px-3 py-2.5 border border-r-0 border-gray-300 rounded-l-xl text-sm">/categoria/</span>
+                        <input
+                          type="text"
+                          value={formData.slug}
+                          onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                          className="flex-1 px-4 py-2.5 border border-gray-300 rounded-r-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 transition-all outline-none"
+                          placeholder="slug-de-categoria"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Descripción <span className="text-gray-400 font-normal">(Opcional)</span></label>
+                    <textarea
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      rows={3}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 transition-all outline-none resize-none"
+                      placeholder="Breve descripción de los productos en esta categoría..."
+                    />
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {editingId && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Slug (URL)</label>
-                <input
-                  type="text"
-                  value={formData.slug}
-                  onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500"
-                  placeholder="slug-de-categoria"
-                />
-              </div>
-            )}
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                rows={2}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500"
-                placeholder="Descripción opcional"
-              />
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowForm(false)}
+                    className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-medium transition-colors cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-3 bg-rose-600 text-white rounded-xl hover:bg-rose-700 font-medium shadow-sm hover:shadow hover:-translate-y-0.5 transition-all cursor-pointer"
+                  >
+                    {editingId ? 'Guardar Cambios' : 'Crear Categoría'}
+                  </button>
+                </div>
+              </form>
             </div>
-
-            <div className="flex gap-2">
-              <button type="submit" className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 cursor-pointer">
-                {editingId ? 'Guardar Cambios' : 'Crear Categoría'}
-              </button>
-              <button type="button" onClick={resetForm} className="px-4 py-2 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                Cancelar
-              </button>
-            </div>
-          </form>
+          </div>
         </div>
       )}
 
@@ -276,14 +333,14 @@ export default function AdminCategoriesPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {categories.length === 0 ? (
+            {filteredCategories.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
-                  No hay categorías creadas
+                  {searchQuery ? 'No se encontraron categorías para tu búsqueda' : 'No hay categorías creadas'}
                 </td>
               </tr>
             ) : (
-              categories.map((category) => (
+              filteredCategories.map((category) => (
                 <tr
                   key={category.id}
                   className="hover:bg-rose-50 cursor-pointer transition-colors"

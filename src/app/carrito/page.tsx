@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
@@ -13,6 +13,14 @@ interface Coupon {
   discount_amount: number;
 }
 
+interface CartDiscount {
+  id: number;
+  name: string;
+  discount_type: string;
+  discount_value: number;
+  min_cart_value: number;
+}
+
 export default function CartPage() {
   const { items, total, itemCount, updateQuantity, removeItem, clearCart } = useCart();
   const { user, isAuthenticated } = useAuth();
@@ -23,23 +31,72 @@ export default function CartPage() {
   const [couponError, setCouponError] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
 
+  // Cart value discount state
+  const [cartDiscount, setCartDiscount] = useState<CartDiscount | null>(null);
+  const [cartDiscountAmount, setCartDiscountAmount] = useState(0);
+
   // Guest checkout state
   const [guestName, setGuestName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
   const [shippingAddress, setShippingAddress] = useState('');
 
-  const finalTotal = appliedCoupon ? total - appliedCoupon.discount_amount : total;
+  // Fetch cart value discount
+  useEffect(() => {
+    const fetchCartDiscount = async () => {
+      try {
+        const res = await fetch('/api/discounts/cart');
+        const data = await res.json();
+        if (data) {
+          setCartDiscount(data);
+        }
+      } catch (error) {
+        console.error('Error fetching cart discount:', error);
+      }
+    };
+    fetchCartDiscount();
+  }, []);
+
+  // Calculate cart discount amount when total or cartDiscount changes
+  useEffect(() => {
+    if (cartDiscount && total >= cartDiscount.min_cart_value) {
+      if (cartDiscount.discount_type === 'percentage') {
+        setCartDiscountAmount((total * cartDiscount.discount_value) / 100);
+      } else {
+        setCartDiscountAmount(cartDiscount.discount_value);
+      }
+    } else {
+      setCartDiscountAmount(0);
+    }
+  }, [total, cartDiscount]);
+
+  const totalAfterCoupon = appliedCoupon ? total - appliedCoupon.discount_amount : total;
+  const finalTotal = totalAfterCoupon - cartDiscountAmount;
+  const totalDiscount = (appliedCoupon?.discount_amount || 0) + cartDiscountAmount;
 
   const handleApplyCoupon = async () => {
     setCouponLoading(true);
     setCouponError('');
 
     try {
+      // Prepare items payload with flattened structure for API
+      const itemsPayload = items.map(item => ({
+        id: item.product.id,
+        category_id: item.product.category_id, // Ensure this property exists on your product type
+        price: item.product.price,
+        quantity: item.quantity
+      }));
+
       const res = await fetch('/api/coupons/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: couponCode, cartTotal: total })
+        body: JSON.stringify({
+          code: couponCode,
+          cartTotal: total,
+          items: itemsPayload,
+          userId: user?.id,
+          guestEmail: guestEmail
+        })
       });
       const data = await res.json();
 
@@ -67,6 +124,31 @@ export default function CartPage() {
     setOrderLoading(true);
 
     try {
+      // Build discount info
+      const discountInfo: {
+        coupon?: { code: string; amount: number; type: string; value: number };
+        cart_discount?: { name: string; amount: number; type: string; value: number; min_value: number };
+      } = {};
+
+      if (appliedCoupon) {
+        discountInfo.coupon = {
+          code: appliedCoupon.code,
+          amount: appliedCoupon.discount_amount,
+          type: appliedCoupon.discount_type,
+          value: appliedCoupon.discount_value
+        };
+      }
+
+      if (cartDiscountAmount > 0 && cartDiscount) {
+        discountInfo.cart_discount = {
+          name: cartDiscount.name,
+          amount: cartDiscountAmount,
+          type: cartDiscount.discount_type,
+          value: cartDiscount.discount_value,
+          min_value: cartDiscount.min_cart_value
+        };
+      }
+
       // First, create the order in the database
       const orderData = {
         userId: isAuthenticated && user ? user.id : null,
@@ -76,9 +158,10 @@ export default function CartPage() {
         shippingAddress: shippingAddress,
         items: items,
         subtotal: total,
-        discount: appliedCoupon?.discount_amount || 0,
+        discount: totalDiscount,
         total: finalTotal,
-        couponCode: appliedCoupon?.code || null
+        couponCode: appliedCoupon?.code || null,
+        discountInfo: Object.keys(discountInfo).length > 0 ? discountInfo : null
       };
 
       const res = await fetch('/api/orders', {
@@ -117,6 +200,13 @@ export default function CartPage() {
 
       if (appliedCoupon) {
         message += `\n🎟️ *Cupón (${appliedCoupon.code}):* -S/ ${appliedCoupon.discount_amount.toFixed(2)}`;
+      }
+
+      if (cartDiscountAmount > 0 && cartDiscount) {
+        const discountLabel = cartDiscount.discount_type === 'percentage'
+          ? `${cartDiscount.discount_value}%`
+          : `S/ ${cartDiscount.discount_value}`;
+        message += `\n🛒 *Desc. Carrito (${discountLabel}):* -S/ ${cartDiscountAmount.toFixed(2)}`;
       }
 
       message += `\n\n✅ *TOTAL: S/ ${finalTotal.toFixed(2)}*`;
@@ -171,11 +261,11 @@ export default function CartPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
-            {items.map((item) => (
-              <div key={item.product.id} className="bg-white rounded-2xl shadow-sm p-4 flex gap-4">
+            {items.map((item, index) => (
+              <div key={`${item.product.id}-${index}`} className="bg-white rounded-2xl shadow-sm p-4 flex gap-4">
                 <div className="w-24 h-24 bg-gray-100 rounded-xl flex-shrink-0 overflow-hidden">
                   <img
-                    src={item.product.image_url || 'https://via.placeholder.com/150'}
+                    src={item.product.customization?.previewBase64 || item.product.image_url || 'https://via.placeholder.com/150'}
                     alt={item.product.name}
                     className="w-full h-full object-cover"
                   />
@@ -186,6 +276,11 @@ export default function CartPage() {
                     <div>
                       <h3 className="font-semibold text-gray-900">{item.product.name}</h3>
                       <p className="text-sm text-gray-500">S/ {item.product.price.toFixed(2)}</p>
+                      {item.product.customization?.previewBase64 && (
+                        <span className="inline-block mt-1 px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">
+                          ✨ Personalizado
+                        </span>
+                      )}
                     </div>
                     <p className="text-lg font-bold text-rose-600">
                       S/ {(item.product.price * item.quantity).toFixed(2)}
@@ -197,7 +292,7 @@ export default function CartPage() {
                       <button
                         onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
                         disabled={item.quantity <= 1}
-                        className="p-2 text-gray-600 hover:text-rose-600 disabled:opacity-50"
+                        className="p-2 text-gray-600 hover:text-rose-600 disabled:opacity-50 cursor-pointer"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
@@ -206,7 +301,7 @@ export default function CartPage() {
                       <span className="px-4 py-1 font-medium">{item.quantity}</span>
                       <button
                         onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                        className="p-2 text-gray-600 hover:text-rose-600"
+                        className="p-2 text-gray-600 hover:text-rose-600 cursor-pointer"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -215,7 +310,7 @@ export default function CartPage() {
                     </div>
                     <button
                       onClick={() => removeItem(item.product.id)}
-                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -232,6 +327,37 @@ export default function CartPage() {
             <div className="bg-white rounded-2xl shadow-sm p-6 sticky top-24 space-y-6">
               <h2 className="text-xl font-bold text-gray-900">Resumen del Pedido</h2>
 
+              {/* Cart Value Discount Banner */}
+              {cartDiscount && total < cartDiscount.min_cart_value && (
+                <div className="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-xl p-3">
+                  <p className="text-sm text-emerald-700">
+                    🛒 ¡Agrega <span className="font-bold">S/ {(cartDiscount.min_cart_value - total).toFixed(2)}</span> más para obtener{' '}
+                    <span className="font-bold">
+                      {cartDiscount.discount_type === 'percentage'
+                        ? `${cartDiscount.discount_value}% OFF`
+                        : `S/ ${cartDiscount.discount_value} OFF`}
+                    </span>!
+                  </p>
+                </div>
+              )}
+
+              {/* Applied Cart Discount Badge */}
+              {cartDiscountAmount > 0 && cartDiscount && (
+                <div className="bg-gradient-to-r from-emerald-500 to-green-500 rounded-xl p-3 text-white">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🎉</span>
+                    <div>
+                      <p className="font-medium text-sm">{cartDiscount.name}</p>
+                      <p className="text-emerald-100 text-xs">
+                        {cartDiscount.discount_type === 'percentage'
+                          ? `${cartDiscount.discount_value}% de descuento aplicado`
+                          : `S/ ${cartDiscount.discount_value} de descuento aplicado`}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Coupon Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Cupón de descuento</label>
@@ -241,7 +367,7 @@ export default function CartPage() {
                       <p className="font-medium text-green-700">{appliedCoupon.code}</p>
                       <p className="text-sm text-green-600">-S/ {appliedCoupon.discount_amount.toFixed(2)}</p>
                     </div>
-                    <button onClick={handleRemoveCoupon} className="text-gray-400 hover:text-red-500">
+                    <button onClick={handleRemoveCoupon} className="text-gray-400 hover:text-red-500 cursor-pointer">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
@@ -259,7 +385,7 @@ export default function CartPage() {
                     <button
                       onClick={handleApplyCoupon}
                       disabled={!couponCode || couponLoading}
-                      className="px-4 py-2 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 disabled:opacity-50"
+                      className="px-4 py-2 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 disabled:opacity-50 cursor-pointer"
                     >
                       {couponLoading ? '...' : 'Aplicar'}
                     </button>
@@ -276,8 +402,14 @@ export default function CartPage() {
                 </div>
                 {appliedCoupon && (
                   <div className="flex justify-between text-green-600">
-                    <span>Descuento</span>
+                    <span>Cupón ({appliedCoupon.code})</span>
                     <span>-S/ {appliedCoupon.discount_amount.toFixed(2)}</span>
+                  </div>
+                )}
+                {cartDiscountAmount > 0 && (
+                  <div className="flex justify-between text-emerald-600">
+                    <span>Desc. por carrito</span>
+                    <span>-S/ {cartDiscountAmount.toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-lg font-bold pt-2 border-t">
@@ -333,7 +465,7 @@ export default function CartPage() {
               <button
                 onClick={handleWhatsAppOrder}
                 disabled={!canCheckout || orderLoading}
-                className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
               >
                 {orderLoading ? (
                   <>
@@ -352,7 +484,7 @@ export default function CartPage() {
 
               <button
                 onClick={clearCart}
-                className="w-full py-2 border border-gray-300 text-gray-600 font-medium rounded-xl hover:bg-gray-50 transition-colors"
+                className="w-full py-2 border border-gray-300 text-gray-600 font-medium rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
               >
                 Vaciar Carrito
               </button>

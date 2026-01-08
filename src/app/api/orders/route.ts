@@ -13,40 +13,67 @@ interface OrderItem {
 
 export async function POST(request: Request) {
   try {
-    const { 
-      userId, 
-      guestName, 
-      guestEmail, 
+    const {
+      userId,
+      guestName,
+      guestEmail,
       guestPhone,
       shippingAddress,
-      items, 
-      subtotal, 
-      discount, 
-      total, 
-      couponCode 
+      items,
+      subtotal,
+      discount,
+      total,
+      couponCode,
+      discountInfo
     } = await request.json();
 
-    // Create order
-    const { data: order, error: orderError } = await db
+    // Create order - try with discount_info first, fallback without if column doesn't exist
+    const orderData: Record<string, unknown> = {
+      user_id: userId || null,
+      guest_email: guestEmail || null,
+      guest_name: guestName || null,
+      guest_phone: guestPhone || null,
+      shipping_address: shippingAddress || null,
+      items_json: items,
+      customization_json: items.some((i: OrderItem) => i.product.customization)
+        ? items.filter((i: OrderItem) => i.product.customization).map((i: OrderItem) => i.product.customization)
+        : null,
+      subtotal,
+      discount: discount || 0,
+      total,
+      coupon_code: couponCode || null,
+      status: 'pending'
+    };
+
+    // Add discount_info if provided
+    if (discountInfo) {
+      orderData.discount_info = discountInfo;
+    }
+
+    let order;
+    let orderError;
+
+    // Try to create order
+    const result = await db
       .from('orders')
-      .insert({
-        user_id: userId || null,
-        guest_email: guestEmail || null,
-        guest_name: guestName || null,
-        guest_phone: guestPhone || null,
-        shipping_address: shippingAddress || null,
-        items_json: items,
-        customization_json: items.some((i: OrderItem) => i.product.customization) 
-          ? items.filter((i: OrderItem) => i.product.customization).map((i: OrderItem) => i.product.customization)
-          : null,
-        subtotal,
-        discount: discount || 0,
-        total,
-        coupon_code: couponCode || null,
-        status: 'pending'
-      })
+      .insert(orderData)
       .select('id')
       .single();
+
+    order = result.data;
+    orderError = result.error;
+
+    // If error is about discount_info column, retry without it
+    if (orderError && orderError.message?.includes('discount_info')) {
+      delete orderData.discount_info;
+      const retryResult = await db
+        .from('orders')
+        .insert(orderData)
+        .select('id')
+        .single();
+      order = retryResult.data;
+      orderError = retryResult.error;
+    }
 
     if (orderError) throw orderError;
 
@@ -62,7 +89,7 @@ export async function POST(request: Request) {
           .select('stock, total_sold')
           .eq('id', item.product.id)
           .single();
-        
+
         if (product) {
           await db
             .from('products')
@@ -82,7 +109,7 @@ export async function POST(request: Request) {
         .select('uses')
         .eq('code', couponCode)
         .single();
-      
+
       if (coupon) {
         await db
           .from('coupons')
@@ -91,9 +118,9 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      orderId: order?.id 
+    return NextResponse.json({
+      success: true,
+      orderId: order?.id
     });
   } catch (error) {
     console.error('Error creating order:', error);

@@ -7,11 +7,25 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const { active } = await request.json();
+    const body = await request.json();
+
+    // Construct update data dynamically
+    const updateData: any = {};
+    if (body.name !== undefined) updateData.name = body.name;
+    if (body.code !== undefined) updateData.code = body.code.toUpperCase();
+    if (body.discount_type !== undefined) updateData.discount_type = body.discount_type;
+    if (body.discount_value !== undefined) updateData.discount_value = body.discount_value;
+    if (body.min_purchase !== undefined) updateData.min_purchase = body.min_purchase;
+    if (body.max_uses !== undefined) updateData.max_uses = body.max_uses;
+    if (body.active !== undefined) updateData.active = body.active;
+    if (body.expires_at !== undefined) updateData.expires_at = body.expires_at;
+    if (body.applies_to !== undefined) updateData.applies_to = body.applies_to;
+    if (body.target_id !== undefined) updateData.target_id = body.target_id;
+    if (body.usage_limit_per_user !== undefined) updateData.usage_limit_per_user = body.usage_limit_per_user;
 
     const { error } = await db
       .from('coupons')
-      .update({ active })
+      .update(updateData)
       .eq('id', parseInt(id));
 
     if (error) throw error;
@@ -29,17 +43,17 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    
-    // Soft delete: set deactivated_by and deactivated_at, set active = false
+
+    // Soft delete using deleted_at
     // TODO: Get user ID from session - for now use admin ID 1
-    const deactivatedBy = 1;
-    
+    const deletedBy = 1;
+
     const { error } = await db
       .from('coupons')
       .update({
-        active: false,
-        deactivated_by: deactivatedBy,
-        deactivated_at: new Date().toISOString()
+        active: false, // Also deactivate it
+        deleted_by: deletedBy, // Changed from deactivated_by to deleted_by for proper soft delete
+        deleted_at: new Date().toISOString() // Use deleted_at for hard filtering
       })
       .eq('id', parseInt(id));
 

@@ -34,7 +34,14 @@ export default function AdminDiscountsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingDiscount, setEditingDiscount] = useState<Discount | null>(null);
   const [error, setError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredDiscounts = discounts.filter(discount =>
+    discount.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const [formData, setFormData] = useState({
     name: '',
     discount_type: 'percentage',
@@ -104,33 +111,60 @@ export default function AdminDiscountsPage() {
     }
 
     try {
-      const res = await fetch('/api/admin/discounts', {
-        method: 'POST',
+      const url = editingDiscount
+        ? `/api/admin/discounts/${editingDiscount.id}`
+        : '/api/admin/discounts';
+
+      const method = editingDiscount ? 'PATCH' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || 'Error al crear descuento');
+        setError(data.error || 'Error al guardar descuento');
         return;
       }
 
-      setShowForm(false);
-      setFormData({
-        name: '',
-        discount_type: 'percentage',
-        discount_value: 10,
-        applies_to: 'product',
-        target_id: 0,
-        start_date: '',
-        end_date: ''
-      });
+      resetForm();
       fetchDiscounts();
     } catch (error) {
-      console.error('Error creating discount:', error);
+      console.error('Error saving discount:', error);
       setError('Error del servidor');
     }
+  };
+
+  const resetForm = () => {
+    setShowForm(false);
+    setEditingDiscount(null);
+    setFormData({
+      name: '',
+      discount_type: 'percentage',
+      discount_value: 10,
+      applies_to: 'product',
+      target_id: 0,
+      start_date: '',
+      end_date: ''
+    });
+    setError('');
+  };
+
+  const handleEdit = (discount: Discount) => {
+    setEditingDiscount(discount);
+    setFormData({
+      name: discount.name,
+      discount_type: discount.discount_type,
+      discount_value: discount.discount_value,
+      applies_to: discount.applies_to,
+      target_id: discount.applies_to === 'cart_value' ? discount.target_id : discount.target_id, // Logic handles min_cart_value stored in target_id
+      start_date: discount.start_date ? discount.start_date.split('T')[0] : '',
+      end_date: discount.end_date ? discount.end_date.split('T')[0] : ''
+    });
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleToggle = async (id: number, active: number) => {
@@ -175,13 +209,16 @@ export default function AdminDiscountsPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Descuentos</h1>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Descuentos</h1>
+          <p className="text-gray-500 mt-1">Gestiona las reglas de descuentos y promociones</p>
+        </div>
         <button
-          onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2 bg-rose-600 text-white rounded-xl font-medium hover:bg-rose-700 transition-colors"
+          onClick={() => { resetForm(); setShowForm(true); }}
+          className="flex items-center gap-2 px-6 py-2.5 bg-rose-600 text-white rounded-xl font-medium hover:bg-rose-700 transition-colors shadow-sm hover:shadow-md cursor-pointer"
         >
-          + Nuevo Descuento
+          <span className="text-xl leading-none">+</span> Nuevo Descuento
         </button>
       </div>
 
@@ -195,128 +232,191 @@ export default function AdminDiscountsPage() {
         </div>
       </div>
 
-      {/* Create Form */}
+      {/* Search Bar */}
+      <div className="mb-6 relative">
+        <input
+          type="text"
+          placeholder="Buscar descuento por nombre..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 transition-all outline-none bg-white shadow-sm"
+        />
+        <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+
+      {/* Create/Edit Modal */}
       {showForm && (
-        <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">Crear Descuento</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+            onClick={() => setShowForm(false)}
+          />
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500"
-                placeholder="Descuento de temporada"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-              <select
-                value={formData.discount_type}
-                onChange={(e) => setFormData({ ...formData, discount_type: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500"
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-rose-500 to-rose-600 px-6 py-4 flex justify-between items-center sticky top-0 z-10">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <span>{editingDiscount ? '✏️' : '🏷️'}</span>
+                {editingDiscount ? 'Editar Descuento' : 'Nuevo Descuento'}
+              </h2>
+              <button
+                onClick={() => setShowForm(false)}
+                className="text-white/80 hover:text-white text-2xl leading-none cursor-pointer w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
               >
-                <option value="percentage">Porcentaje (%)</option>
-                <option value="fixed">Monto Fijo (S/)</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Valor {formData.discount_type === 'percentage' ? '(máx 80%)' : ''}
-              </label>
-              <input
-                type="number"
-                value={formData.discount_value}
-                onChange={(e) => setFormData({ ...formData, discount_value: parseFloat(e.target.value) || 0 })}
-                required
-                min="0"
-                max={formData.discount_type === 'percentage' ? 80 : undefined}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Aplicar a</label>
-              <select
-                value={formData.applies_to}
-                onChange={(e) => setFormData({ ...formData, applies_to: e.target.value, target_id: 0 })}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500"
-              >
-                <option value="product">Producto</option>
-                <option value="category">Categoría</option>
-                <option value="cart_value">Valor del Carrito</option>
-              </select>
-            </div>
-            {formData.applies_to === 'cart_value' ? (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Valor mínimo del carrito (S/)
-                </label>
-                <input
-                  type="number"
-                  value={formData.target_id}
-                  onChange={(e) => setFormData({ ...formData, target_id: parseFloat(e.target.value) || 0 })}
-                  required
-                  min="1"
-                  step="0.01"
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500"
-                  placeholder="150.00"
-                />
-                <p className="text-xs text-gray-500 mt-1">El descuento se aplica si el carrito supera este valor</p>
-              </div>
-            ) : (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {formData.applies_to === 'product' ? 'Producto' : 'Categoría'}
-                </label>
-                <select
-                  value={formData.target_id}
-                  onChange={(e) => setFormData({ ...formData, target_id: parseInt(e.target.value) })}
-                  required
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500"
-                >
-                  <option value={0}>Seleccionar...</option>
-                  {getTargetOptions().map(opt => (
-                    <option key={opt.id} value={opt.id}>{opt.name}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Inicio</label>
-              <input
-                type="date"
-                value={formData.start_date}
-                onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Fin</label>
-              <input
-                type="date"
-                value={formData.end_date}
-                onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500"
-              />
-            </div>
-            <div className="md:col-span-2 lg:col-span-3 flex gap-2">
-              <button type="submit" className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700">
-                Crear Descuento
-              </button>
-              <button type="button" onClick={() => { setShowForm(false); setError(''); }} className="px-4 py-2 border rounded-lg hover:bg-gray-50">
-                Cancelar
+                ×
               </button>
             </div>
-          </form>
+
+            {/* Modal Body */}
+            <div className="p-6">
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 text-sm flex items-center gap-2">
+                  <span>⚠️</span> {error}
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="col-span-1 md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Nombre del Descuento</label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      required
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 transition-all outline-none"
+                      placeholder="Ej: Descuento de Verano"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Tipo de Descuento</label>
+                    <select
+                      value={formData.discount_type}
+                      onChange={(e) => setFormData({ ...formData, discount_type: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 transition-all outline-none appearance-none bg-white"
+                    >
+                      <option value="percentage">Porcentaje (%)</option>
+                      <option value="fixed">Monto Fijo (S/)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Valor {formData.discount_type === 'percentage' ? '(máx 80%)' : '(S/)'}
+                    </label>
+                    <div className="relative">
+                      {formData.discount_type === 'fixed' && (
+                        <span className="absolute left-3 top-2.5 text-gray-500">S/</span>
+                      )}
+                      <input
+                        type="number"
+                        value={formData.discount_value}
+                        onChange={(e) => setFormData({ ...formData, discount_value: parseFloat(e.target.value) || 0 })}
+                        required
+                        min="0"
+                        max={formData.discount_type === 'percentage' ? 80 : undefined}
+                        className={`w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 transition-all outline-none ${formData.discount_type === 'fixed' ? 'pl-8' : ''}`}
+                      />
+                      {formData.discount_type === 'percentage' && (
+                        <span className="absolute right-3 top-2.5 text-gray-500">%</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Aplicar a</label>
+                    <select
+                      value={formData.applies_to}
+                      onChange={(e) => setFormData({ ...formData, applies_to: e.target.value, target_id: 0 })}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 transition-all outline-none appearance-none bg-white"
+                    >
+                      <option value="product">Producto Específico</option>
+                      <option value="category">Categoría Completa</option>
+                      <option value="cart_value">Valor del Carrito</option>
+                    </select>
+                  </div>
+
+                  {formData.applies_to === 'cart_value' ? (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Mínimo en Carrito
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-2.5 text-gray-500">S/</span>
+                        <input
+                          type="number"
+                          value={formData.target_id}
+                          onChange={(e) => setFormData({ ...formData, target_id: parseFloat(e.target.value) || 0 })}
+                          required
+                          min="1"
+                          step="0.01"
+                          className="w-full px-4 py-2.5 pl-8 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 transition-all outline-none"
+                          placeholder="0.00"
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">Se aplica si el total supera este monto</p>
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        {formData.applies_to === 'product' ? 'Seleccionar Producto' : 'Seleccionar Categoría'}
+                      </label>
+                      <select
+                        value={formData.target_id}
+                        onChange={(e) => setFormData({ ...formData, target_id: parseInt(e.target.value) })}
+                        required
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 transition-all outline-none appearance-none bg-white"
+                      >
+                        <option value={0}>Seleccionar...</option>
+                        {getTargetOptions().map(opt => (
+                          <option key={opt.id} value={opt.id}>{opt.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Fecha Inicio</label>
+                    <input
+                      type="date"
+                      value={formData.start_date}
+                      onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 transition-all outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Fecha Fin</label>
+                    <input
+                      type="date"
+                      value={formData.end_date}
+                      onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 transition-all outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-4 border-t border-gray-100 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowForm(false)}
+                    className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-medium transition-colors cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-3 bg-rose-600 text-white rounded-xl hover:bg-rose-700 font-medium shadow-sm hover:shadow hover:-translate-y-0.5 transition-all cursor-pointer"
+                  >
+                    {editingDiscount ? 'Guardar Cambios' : 'Crear Descuento'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       )}
 
@@ -334,14 +434,14 @@ export default function AdminDiscountsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {discounts.length === 0 ? (
+            {filteredDiscounts.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                  No hay descuentos creados
+                  {searchQuery ? 'No se encontraron descuentos para tu búsqueda' : 'No hay descuentos creados'}
                 </td>
               </tr>
             ) : (
-              discounts.map((discount) => (
+              filteredDiscounts.map((discount) => (
                 <tr key={discount.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 font-medium text-gray-900">{discount.name}</td>
                   <td className="px-6 py-4 text-gray-900">
@@ -352,10 +452,10 @@ export default function AdminDiscountsPage() {
                   <td className="px-6 py-4">
                     <div>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${discount.applies_to === 'product'
-                          ? 'bg-blue-100 text-blue-700'
-                          : discount.applies_to === 'category'
-                            ? 'bg-purple-100 text-purple-700'
-                            : 'bg-emerald-100 text-emerald-700'
+                        ? 'bg-blue-100 text-blue-700'
+                        : discount.applies_to === 'category'
+                          ? 'bg-purple-100 text-purple-700'
+                          : 'bg-emerald-100 text-emerald-700'
                         }`}>
                         {discount.applies_to === 'product' ? 'Producto' : discount.applies_to === 'category' ? 'Categoría' : 'Carrito'}
                       </span>
@@ -388,6 +488,12 @@ export default function AdminDiscountsPage() {
                           }`}
                       >
                         {discount.active ? 'Pausar' : 'Activar'}
+                      </button>
+                      <button
+                        onClick={() => handleEdit(discount)}
+                        className="px-3 py-1 text-blue-600 hover:bg-blue-50 rounded-lg text-sm"
+                      >
+                        Editar
                       </button>
                       <button
                         onClick={() => handleDelete(discount.id)}

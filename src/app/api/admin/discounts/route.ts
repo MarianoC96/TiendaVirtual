@@ -6,6 +6,7 @@ export async function GET() {
     const { data: discounts, error } = await db
       .from('discounts')
       .select('*')
+      .is('deleted_at', null)
       .order('created_at', { ascending: false });
 
     if (error) throw error;

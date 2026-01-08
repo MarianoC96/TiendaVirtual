@@ -3,16 +3,17 @@ import db from '@/lib/db';
 
 export async function GET() {
   try {
-    // Note: Supabase doesn't support complex JOINs in the same way
-    // We'll fetch coupons and then enrich with user data
+    // Filter non-deleted coupons
     const { data: coupons, error } = await db
       .from('coupons')
       .select('*')
+      .is('deleted_at', null)
       .order('id', { ascending: false });
 
     if (error) throw error;
 
-    // Enrich with creator and deactivator names
+    // Enrich with creator and deactivator details...
+    // (Existing enrichment logic remains, just ensuring we filter deleted first)
     const enrichedCoupons = await Promise.all(
       (coupons || []).map(async (coupon) => {
         let creator_name = null;
@@ -36,7 +37,17 @@ export async function GET() {
           deactivator_name = deactivator?.name;
         }
 
-        return { ...coupon, creator_name, deactivator_name };
+        // Enrich target name if needed (optional optimization)
+        let target_name = null;
+        if (coupon.applies_to === 'product' && coupon.target_id) {
+          const { data: p } = await db.from('products').select('name').eq('id', coupon.target_id).single();
+          target_name = p?.name;
+        } else if (coupon.applies_to === 'category' && coupon.target_id) {
+          const { data: c } = await db.from('categories').select('name').eq('id', coupon.target_id).single();
+          target_name = c?.name;
+        }
+
+        return { ...coupon, creator_name, deactivator_name, target_name };
       })
     );
 
@@ -49,7 +60,10 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { code, name, discount_type, discount_value, min_purchase, max_uses } = await request.json();
+    const {
+      code, name, discount_type, discount_value, min_purchase, max_uses, expires_at,
+      applies_to, target_id, usage_limit_per_user
+    } = await request.json();
 
     // TODO: Get user ID from session - for now use admin ID 1
     const createdBy = 1;
@@ -57,14 +71,18 @@ export async function POST(request: Request) {
     const { data, error } = await db
       .from('coupons')
       .insert({
-        code,
+        code: code.toUpperCase(),
         name,
         discount_type,
         discount_value,
         min_purchase: min_purchase || 0,
         max_uses,
+        expires_at, // Add expiration date support
         active: true,
-        created_by: createdBy
+        created_by: createdBy,
+        applies_to: applies_to || 'cart_value',
+        target_id: target_id || 0,
+        usage_limit_per_user: usage_limit_per_user || 0
       })
       .select('id')
       .single();

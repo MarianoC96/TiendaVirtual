@@ -36,18 +36,18 @@ export default function PromoBanner() {
         : `S/ ${discount.discount_value} OFF`;
 
     return (
-        <div className="bg-gradient-to-r from-rose-500 via-rose-600 to-pink-600 text-white py-2 px-4 relative">
-            <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 text-sm">
-                <span className="animate-pulse">🎉</span>
+        <div className="fixed top-16 lg:top-20 left-0 right-0 z-40 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white py-2 px-4 shadow-sm">
+            <div className="max-w-7xl mx-auto flex items-center justify-center gap-3 text-sm">
+                <span className="text-base">🛒</span>
                 <span className="font-medium">
-                    ¡{discountText} en compras mayores a S/ {discount.min_cart_value}!
+                    ¡<span className="font-bold">{discountText}</span> en compras mayores a S/ {discount.min_cart_value}!
                 </span>
-                <span className="hidden sm:inline text-rose-100">
+                <span className="hidden md:inline text-green-100 text-xs">
                     — {discount.name}
                 </span>
                 <button
                     onClick={() => setVisible(false)}
-                    className="absolute right-4 text-white/70 hover:text-white text-lg leading-none cursor-pointer"
+                    className="absolute right-4 text-white/70 hover:text-white text-xl leading-none cursor-pointer transition-colors"
                     aria-label="Cerrar"
                 >
                     ×

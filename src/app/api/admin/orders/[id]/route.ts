@@ -15,14 +15,14 @@ export async function PATCH(
   try {
     const { id } = await params;
     const { status } = await request.json();
-    
+
     // Get current order
     const { data: order, error: orderError } = await db
       .from('orders')
       .select('*')
       .eq('id', parseInt(id))
       .single();
-    
+
     if (orderError || !order) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
@@ -38,7 +38,7 @@ export async function PATCH(
           .select('stock, total_sold')
           .eq('id', item.product.id)
           .single();
-        
+
         if (product) {
           await db
             .from('products')
@@ -59,7 +59,7 @@ export async function PATCH(
           .select('stock, total_sold')
           .eq('id', item.product.id)
           .single();
-        
+
         if (product) {
           await db
             .from('products')
@@ -93,13 +93,14 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    
+
     const { data: order, error } = await db
       .from('orders')
       .select('*')
       .eq('id', parseInt(id))
+      .is('deleted_at', null)
       .single();
-    
+
     if (error || !order) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
@@ -110,3 +111,41 @@ export async function GET(
     return NextResponse.json({ error: 'Failed to fetch order' }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    // Get admin ID from request body (or default to 1 for now)
+    let deletedBy = 'admin:1';
+    try {
+      const body = await request.json();
+      if (body.adminId) {
+        deletedBy = `admin:${body.adminId}`;
+      }
+    } catch {
+      // No body provided, use default
+    }
+
+    // Soft delete the order
+    const { error } = await db
+      .from('orders')
+      .update({
+        deleted_at: new Date().toISOString(),
+        deleted_by: deletedBy,
+        deletion_reason: 'manual'
+      })
+      .eq('id', parseInt(id));
+
+    if (error) throw error;
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting order:', error);
+    return NextResponse.json({ error: 'Failed to delete order' }, { status: 500 });
+  }
+}
+

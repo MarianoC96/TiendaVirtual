@@ -22,6 +22,7 @@ interface Product {
   stock?: number;
   in_stock?: boolean;
   customization?: CustomizationData;
+  category_id?: number;
 }
 
 interface CartItem {

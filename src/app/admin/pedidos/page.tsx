@@ -17,6 +17,22 @@ interface OrderItem {
   quantity: number;
 }
 
+interface DiscountInfo {
+  coupon?: {
+    code: string;
+    amount: number;
+    type: string;
+    value: number;
+  };
+  cart_discount?: {
+    name: string;
+    amount: number;
+    type: string;
+    value: number;
+    min_value: number;
+  };
+}
+
 interface Order {
   id: number;
   user_id: number | null;
@@ -31,6 +47,7 @@ interface Order {
   subtotal: number;
   status: string;
   coupon_code: string | null;
+  discount_info: DiscountInfo | string | null;
   payment_method: string | null;
   created_at: string;
 }
@@ -151,6 +168,35 @@ export default function AdminOrdersPage() {
       return [];
     } catch {
       return [];
+    }
+  };
+
+  const [deletingOrder, setDeletingOrder] = useState<number | null>(null);
+
+  const handleDeleteOrder = async (orderId: number) => {
+    if (!confirm('¿Estás seguro de eliminar este pedido? Esta acción lo ocultará del panel pero quedará guardado en el sistema.')) {
+      return;
+    }
+
+    setDeletingOrder(orderId);
+    try {
+      const res = await fetch(`/api/admin/orders/${orderId}`, {
+        method: 'DELETE'
+      });
+
+      if (res.ok) {
+        setOrders(orders.filter(o => o.id !== orderId));
+        if (viewingOrder?.id === orderId) {
+          setViewingOrder(null);
+        }
+      } else {
+        alert('Error al eliminar el pedido');
+      }
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      alert('Error al eliminar el pedido');
+    } finally {
+      setDeletingOrder(null);
     }
   };
 
@@ -361,16 +407,32 @@ export default function AdminOrdersPage() {
                       </select>
                     </td>
                     <td className="px-4 py-4 text-right">
-                      <button
-                        onClick={() => setViewingOrder(order)}
-                        className="p-2 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                        title="Ver detalles"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                      </button>
+                      <div className="flex justify-end gap-1">
+                        <button
+                          onClick={() => setViewingOrder(order)}
+                          className="p-2 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                          title="Ver detalles"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteOrder(order.id)}
+                          disabled={deletingOrder === order.id}
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                          title="Eliminar pedido"
+                        >
+                          {deletingOrder === order.id ? (
+                            <div className="w-5 h-5 animate-spin rounded-full border-2 border-red-500 border-t-transparent" />
+                          ) : (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -459,23 +521,66 @@ export default function AdminOrdersPage() {
               </div>
 
               {/* Cupón y Descuento */}
-              {(viewingOrder.coupon_code || viewingOrder.discount > 0) && (
+              {(viewingOrder.coupon_code || viewingOrder.discount > 0 || viewingOrder.discount_info) && (
                 <div className="bg-green-50 rounded-xl p-4 border border-green-200">
-                  <h4 className="font-semibold text-green-800 mb-2 flex items-center gap-2">
-                    <span>🎟️</span> Promoción Aplicada
+                  <h4 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
+                    <span>🎉</span> Descuentos Aplicados
                   </h4>
-                  <div className="flex items-center gap-4 text-sm">
-                    {viewingOrder.coupon_code && (
-                      <div>
-                        <span className="text-green-600">Cupón: </span>
-                        <span className="font-mono bg-green-100 px-2 py-1 rounded font-medium">{viewingOrder.coupon_code}</span>
-                      </div>
-                    )}
-                    {viewingOrder.discount > 0 && (
-                      <div className="text-green-700 font-medium">
-                        Ahorro: S/ {viewingOrder.discount.toFixed(2)}
-                      </div>
-                    )}
+                  <div className="space-y-2 text-sm">
+                    {/* Cupón */}
+                    {(() => {
+                      const discountInfo = typeof viewingOrder.discount_info === 'string'
+                        ? JSON.parse(viewingOrder.discount_info) as DiscountInfo
+                        : viewingOrder.discount_info as DiscountInfo | null;
+
+                      return (
+                        <>
+                          {(discountInfo?.coupon || viewingOrder.coupon_code) && (
+                            <div className="flex items-center justify-between bg-white/50 rounded-lg px-3 py-2">
+                              <div className="flex items-center gap-2">
+                                <span>🎟️</span>
+                                <span className="text-green-700">Cupón:</span>
+                                <span className="font-mono bg-green-100 px-2 py-0.5 rounded font-medium text-green-800">
+                                  {discountInfo?.coupon?.code || viewingOrder.coupon_code}
+                                </span>
+                                {discountInfo?.coupon && (
+                                  <span className="text-green-600 text-xs">
+                                    ({discountInfo.coupon.type === 'percentage' ? `${discountInfo.coupon.value}%` : `S/${discountInfo.coupon.value}`})
+                                  </span>
+                                )}
+                              </div>
+                              {discountInfo?.coupon && (
+                                <span className="font-medium text-green-700">-S/ {discountInfo.coupon.amount.toFixed(2)}</span>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Descuento por carrito */}
+                          {discountInfo?.cart_discount && (
+                            <div className="flex items-center justify-between bg-white/50 rounded-lg px-3 py-2">
+                              <div className="flex items-center gap-2">
+                                <span>🛒</span>
+                                <span className="text-green-700">Carrito:</span>
+                                <span className="text-green-800 font-medium">{discountInfo.cart_discount.name}</span>
+                                <span className="text-green-600 text-xs">
+                                  ({discountInfo.cart_discount.type === 'percentage'
+                                    ? `${discountInfo.cart_discount.value}%`
+                                    : `S/${discountInfo.cart_discount.value}`} en compras ≥S/{discountInfo.cart_discount.min_value})
+                                </span>
+                              </div>
+                              <span className="font-medium text-green-700">-S/ {discountInfo.cart_discount.amount.toFixed(2)}</span>
+                            </div>
+                          )}
+
+                          {/* Total ahorrado si no hay info detallada */}
+                          {!discountInfo && viewingOrder.discount > 0 && (
+                            <div className="text-green-700 font-medium">
+                              Ahorro total: S/ {viewingOrder.discount.toFixed(2)}
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
               )}

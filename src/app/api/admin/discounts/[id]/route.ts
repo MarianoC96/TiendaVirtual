@@ -9,15 +9,27 @@ export async function PATCH(
     const { id: idParam } = await params;
     const id = parseInt(idParam);
     const body = await request.json();
-    const { active } = body;
 
-    if (typeof active !== 'boolean' && typeof active !== 'number') {
-      return NextResponse.json({ error: 'Campo active requerido' }, { status: 400 });
+    // Validate required fields if they are present in the update
+    // We allow partial updates, but if provided, they must be valid
+
+    const updateData: any = {};
+    if (body.name !== undefined) updateData.name = body.name;
+    if (body.discount_type !== undefined) updateData.discount_type = body.discount_type;
+    if (body.discount_value !== undefined) updateData.discount_value = body.discount_value;
+    if (body.applies_to !== undefined) updateData.applies_to = body.applies_to;
+    if (body.target_id !== undefined) updateData.target_id = body.target_id;
+    if (body.start_date !== undefined) updateData.start_date = body.start_date;
+    if (body.end_date !== undefined) updateData.end_date = body.end_date;
+    if (body.active !== undefined) updateData.active = Boolean(body.active);
+
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
     }
 
     const { error } = await db
       .from('discounts')
-      .update({ active: Boolean(active) })
+      .update(updateData)
       .eq('id', id);
 
     if (error) throw error;
@@ -37,9 +49,16 @@ export async function DELETE(
     const { id: idParam } = await params;
     const id = parseInt(idParam);
 
+    // Soft delete
+    const deletedBy = 1; // TODO: Get from session
+
     const { error } = await db
       .from('discounts')
-      .delete()
+      .update({
+        active: false,
+        deleted_by: deletedBy,
+        deleted_at: new Date().toISOString()
+      })
       .eq('id', id);
 
     if (error) throw error;
