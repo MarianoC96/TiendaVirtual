@@ -127,7 +127,9 @@ export default function CartPage() {
       // Build discount info
       const discountInfo: {
         coupon?: { code: string; amount: number; type: string; value: number };
-        cart_discount?: { name: string; amount: number; type: string; value: number; min_value: number };
+        cart_discount?: { id: number; name: string; amount: number; type: string; value: number; min_value: number };
+        product_discounts?: any[];
+        category_discounts?: any[];
       } = {};
 
       if (appliedCoupon) {
@@ -141,6 +143,7 @@ export default function CartPage() {
 
       if (cartDiscountAmount > 0 && cartDiscount) {
         discountInfo.cart_discount = {
+          id: cartDiscount.id,
           name: cartDiscount.name,
           amount: cartDiscountAmount,
           type: cartDiscount.discount_type,
@@ -148,6 +151,32 @@ export default function CartPage() {
           min_value: cartDiscount.min_cart_value
         };
       }
+
+      const productDiscounts: any[] = [];
+      const categoryDiscounts: any[] = [];
+
+      items.forEach(item => {
+        if (item.product.discount_info && item.product.discount_info.id) {
+          const d = item.product.discount_info;
+          const entry = {
+            discount_id: d.id,
+            product_id: item.product.id,
+            product_name: item.product.name,
+            amount: d.amount * item.quantity,
+            type: d.type,
+            value: d.value
+          };
+
+          if (d.applies_to === 'product') {
+            productDiscounts.push(entry);
+          } else if (d.applies_to === 'category') {
+            categoryDiscounts.push(entry);
+          }
+        }
+      });
+
+      if (productDiscounts.length > 0) discountInfo.product_discounts = productDiscounts;
+      if (categoryDiscounts.length > 0) discountInfo.category_discounts = categoryDiscounts;
 
       // First, create the order in the database
       const orderData = {

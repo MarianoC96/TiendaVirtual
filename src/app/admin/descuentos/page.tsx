@@ -16,6 +16,10 @@ interface Discount {
   created_by: number | null;
   created_at: string;
   creator_name?: string;
+  usage_count?: number;
+  deleted_at?: string;
+  deleted_by?: string;
+  deleter_name?: string;
 }
 
 interface Product {
@@ -36,11 +40,23 @@ export default function AdminDiscountsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingDiscount, setEditingDiscount] = useState<Discount | null>(null);
   const [error, setError] = useState('');
+
+  const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
+  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
+
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredDiscounts = discounts.filter(discount =>
-    discount.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredDiscounts = discounts.filter(discount => {
+    const matchesSearch = discount.name.toLowerCase().includes(searchQuery.toLowerCase());
+
+    if (activeTab === 'history') {
+      if (!discount.deleted_at) return false;
+      const deletedMonth = discount.deleted_at.slice(0, 7);
+      return matchesSearch && deletedMonth === selectedMonth;
+    }
+
+    return matchesSearch;
+  });
 
   const [formData, setFormData] = useState({
     name: '',
@@ -56,11 +72,12 @@ export default function AdminDiscountsPage() {
     fetchDiscounts();
     fetchProducts();
     fetchCategories();
-  }, []);
+  }, [activeTab]); // Refetch when tab changes
 
   const fetchDiscounts = async () => {
     try {
-      const res = await fetch('/api/admin/discounts');
+      const url = activeTab === 'history' ? '/api/admin/discounts?deleted=true' : '/api/admin/discounts';
+      const res = await fetch(url);
       const data = await res.json();
       setDiscounts(data);
     } catch (error) {
@@ -199,6 +216,10 @@ export default function AdminDiscountsPage() {
     return categories.map(c => ({ id: c.id, name: c.name }));
   };
 
+  const handleTabChange = (tab: 'active' | 'history') => {
+    setActiveTab(tab);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -220,6 +241,38 @@ export default function AdminDiscountsPage() {
         >
           <span className="text-xl leading-none">+</span> Nuevo Descuento
         </button>
+      </div>
+
+      <div className="flex flex-col sm:flex-row justify-between items-end gap-4 mb-6">
+        <div className="flex bg-gray-100 p-1 rounded-xl">
+          <button
+            onClick={() => handleTabChange('active')}
+            className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'active'
+              ? 'bg-white text-gray-900 shadow-sm'
+              : 'text-gray-500 hover:text-gray-700'
+              }`}
+          >
+            Activos
+          </button>
+          <button
+            onClick={() => handleTabChange('history')}
+            className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'history'
+              ? 'bg-white text-gray-900 shadow-sm'
+              : 'text-gray-500 hover:text-gray-700'
+              }`}
+          >
+            Historial
+          </button>
+        </div>
+
+        {activeTab === 'history' && (
+          <input
+            type="month"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 outline-none"
+          />
+        )}
       </div>
 
       {/* Info banner */}
@@ -428,9 +481,22 @@ export default function AdminDiscountsPage() {
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Nombre</th>
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Descuento</th>
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Aplica a</th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Vigencia</th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Estado</th>
-              <th className="px-6 py-4 text-right text-sm font-medium text-gray-500">Acciones</th>
+              {activeTab === 'active' ? (
+                <>
+                  <th className="px-6 py-4 text-center text-sm font-medium text-gray-500">Uso</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Vigencia</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Creado Por</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Estado</th>
+                  <th className="px-6 py-4 text-right text-sm font-medium text-gray-500">Acciones</th>
+                </>
+              ) : (
+                <>
+                  <th className="px-6 py-4 text-center text-sm font-medium text-gray-500">Uso Total</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Creado Por</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Eliminado Por</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Fecha Eliminación</th>
+                </>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -462,47 +528,76 @@ export default function AdminDiscountsPage() {
                       <div className="text-sm text-gray-500 mt-1">{discount.target_name}</div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-gray-500 text-sm">
-                    {discount.start_date || discount.end_date ? (
-                      <div>
-                        {discount.start_date && <div>Desde: {new Date(discount.start_date).toLocaleDateString('es-PE')}</div>}
-                        {discount.end_date && <div>Hasta: {new Date(discount.end_date).toLocaleDateString('es-PE')}</div>}
-                      </div>
-                    ) : (
-                      <span className="text-gray-400">Sin límite</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${discount.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-                      }`}>
-                      {discount.active ? 'Activo' : 'Inactivo'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => handleToggle(discount.id, discount.active)}
-                        className={`px-3 py-1 rounded-lg text-sm ${discount.active
-                          ? 'text-amber-600 hover:bg-amber-50'
-                          : 'text-green-600 hover:bg-green-50'
-                          }`}
-                      >
-                        {discount.active ? 'Pausar' : 'Activar'}
-                      </button>
-                      <button
-                        onClick={() => handleEdit(discount)}
-                        className="px-3 py-1 text-blue-600 hover:bg-blue-50 rounded-lg text-sm"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => handleDelete(discount.id)}
-                        className="px-3 py-1 text-red-600 hover:bg-red-50 rounded-lg text-sm"
-                      >
-                        Eliminar
-                      </button>
-                    </div>
-                  </td>
+                  {activeTab === 'active' ? (
+                    <>
+                      <td className="px-6 py-4 text-center">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                          {discount.usage_count || 0}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-gray-500 text-sm">
+                        {discount.start_date || discount.end_date ? (
+                          <div>
+                            {discount.start_date && <div>Desde: {new Date(discount.start_date).toLocaleDateString('es-PE')}</div>}
+                            {discount.end_date && <div>Hasta: {new Date(discount.end_date).toLocaleDateString('es-PE')}</div>}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">Sin límite</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-gray-500 text-sm">
+                        {discount.creator_name || <span className="text-gray-400">Sistema</span>}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${discount.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                          }`}>
+                          {discount.active ? 'Activo' : 'Inactivo'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => handleToggle(discount.id, discount.active)}
+                            className={`px-3 py-1 rounded-lg text-sm ${discount.active
+                              ? 'text-amber-600 hover:bg-amber-50'
+                              : 'text-green-600 hover:bg-green-50'
+                              }`}
+                          >
+                            {discount.active ? 'Pausar' : 'Activar'}
+                          </button>
+                          <button
+                            onClick={() => handleEdit(discount)}
+                            className="px-3 py-1 text-blue-600 hover:bg-blue-50 rounded-lg text-sm"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => handleDelete(discount.id)}
+                            className="px-3 py-1 text-red-600 hover:bg-red-50 rounded-lg text-sm"
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="px-6 py-4 text-center">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                          {discount.usage_count || 0}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-gray-500 text-sm">
+                        {discount.creator_name || <span className="text-gray-400">Sistema</span>}
+                      </td>
+                      <td className="px-6 py-4 text-gray-500 text-sm">
+                        {discount.deleter_name || <span className="text-gray-400">Desconocido</span>}
+                      </td>
+                      <td className="px-6 py-4 text-gray-500 text-sm">
+                        {discount.deleted_at ? new Date(discount.deleted_at).toLocaleString() : '-'}
+                      </td>
+                    </>
+                  )}
                 </tr>
               ))
             )}

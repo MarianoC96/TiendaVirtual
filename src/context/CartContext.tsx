@@ -23,6 +23,14 @@ interface Product {
   in_stock?: boolean;
   customization?: CustomizationData;
   category_id?: number;
+  discount_info?: {
+    id?: number;
+    applies_to?: string;
+    amount: number;
+    type: string;
+    value: number;
+    label: string;
+  };
 }
 
 interface CartItem {

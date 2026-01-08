@@ -64,16 +64,22 @@ export async function DELETE(
       .from('products')
       .select('*', { count: 'exact', head: true })
       .eq('category_id', id);
-    
+
     if (productCount && productCount > 0) {
-      return NextResponse.json({ 
-        error: `No se puede eliminar: hay ${productCount} producto(s) en esta categoría` 
+      return NextResponse.json({
+        error: `No se puede eliminar: hay ${productCount} producto(s) en esta categoría`
       }, { status: 400 });
     }
 
+    // Soft delete
+    const deletedBy = "1"; // Mock Admin ID
+
     const { error } = await db
       .from('categories')
-      .delete()
+      .update({
+        deleted_at: new Date().toISOString(),
+        deleted_by: deletedBy
+      })
       .eq('id', id);
 
     if (error) throw error;

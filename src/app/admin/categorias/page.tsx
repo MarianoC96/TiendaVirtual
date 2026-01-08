@@ -9,6 +9,11 @@ interface Category {
   icon: string;
   description: string | null;
   product_count: number;
+  created_by?: number;
+  creator_name?: string;
+  deleted_at?: string;
+  deleted_by?: string;
+  deleter_name?: string;
 }
 
 interface Product {
@@ -33,12 +38,24 @@ export default function AdminCategoriesPage() {
     description: ''
   });
 
+  const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
+  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
+
+
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredCategories = categories.filter(category =>
-    category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    category.slug.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredCategories = categories.filter(category => {
+    const matchesSearch = category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      category.slug.toLowerCase().includes(searchQuery.toLowerCase());
+
+    if (activeTab === 'history') {
+      if (!category.deleted_at) return false;
+      const deletedMonth = category.deleted_at.slice(0, 7);
+      return matchesSearch && deletedMonth === selectedMonth;
+    }
+
+    return matchesSearch;
+  });
 
   // Modal de productos
   const [viewingCategory, setViewingCategory] = useState<Category | null>(null);
@@ -51,7 +68,8 @@ export default function AdminCategoriesPage() {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch('/api/admin/categories');
+      const url = activeTab === 'history' ? '/api/admin/categories?deleted=true' : '/api/admin/categories';
+      const res = await fetch(url);
       const data = await res.json();
       setCategories(data);
     } catch (error) {
@@ -135,6 +153,17 @@ export default function AdminCategoriesPage() {
     }
   };
 
+  const handleTabChange = (tab: 'active' | 'history') => {
+    setActiveTab(tab);
+    // Fetch happens in useEffect depend on activeTab? No, simple re-fetch
+    // We need useEffect to trigger fetch OR call fetch manually. 
+    // Let's rely on calling fetch in useEffect if we add activeTab dependency
+  };
+
+  useEffect(() => {
+    fetchCategories();
+  }, [activeTab]);
+
   const handleDelete = async (id: number, productCount: number) => {
     if (productCount > 0) {
       alert(`No se puede eliminar: hay ${productCount} producto(s) en esta categoría`);
@@ -183,6 +212,38 @@ export default function AdminCategoriesPage() {
         >
           <span className="text-xl leading-none">+</span> Nueva Categoría
         </button>
+      </div>
+
+      <div className="flex flex-col sm:flex-row justify-between items-end gap-4 mb-6">
+        <div className="flex bg-gray-100 p-1 rounded-xl">
+          <button
+            onClick={() => handleTabChange('active')}
+            className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'active'
+              ? 'bg-white text-gray-900 shadow-sm'
+              : 'text-gray-500 hover:text-gray-700'
+              }`}
+          >
+            Activas
+          </button>
+          <button
+            onClick={() => handleTabChange('history')}
+            className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'history'
+              ? 'bg-white text-gray-900 shadow-sm'
+              : 'text-gray-500 hover:text-gray-700'
+              }`}
+          >
+            Historial
+          </button>
+        </div>
+
+        {activeTab === 'history' && (
+          <input
+            type="month"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 outline-none"
+          />
+        )}
       </div>
 
       {/* Search Bar */}
@@ -327,9 +388,20 @@ export default function AdminCategoriesPage() {
             <tr>
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Categoría</th>
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Slug</th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Descripción</th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Productos</th>
-              <th className="px-6 py-4 text-right text-sm font-medium text-gray-500">Acciones</th>
+              {activeTab === 'active' ? (
+                <>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Descripción</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Productos</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Creado Por</th>
+                  <th className="px-6 py-4 text-right text-sm font-medium text-gray-500">Acciones</th>
+                </>
+              ) : (
+                <>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Creado Por</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Eliminado Por</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Fecha Eliminación</th>
+                </>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -353,38 +425,58 @@ export default function AdminCategoriesPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-gray-500 font-mono text-sm">{category.slug}</td>
-                  <td className="px-6 py-4 text-gray-600 text-sm max-w-xs truncate">
-                    {category.description || <span className="text-gray-400">-</span>}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${category.product_count > 0
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'bg-gray-100 text-gray-500'
-                      }`}>
-                      {category.product_count} producto{category.product_count !== 1 ? 's' : ''}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => handleEdit(category)}
-                        className="px-3 py-1 text-blue-600 hover:bg-blue-50 rounded-lg text-sm cursor-pointer"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => handleDelete(category.id, category.product_count)}
-                        className={`px-3 py-1 rounded-lg text-sm cursor-pointer ${category.product_count > 0
-                          ? 'text-gray-400 cursor-not-allowed'
-                          : 'text-red-600 hover:bg-red-50'
-                          }`}
-                        disabled={category.product_count > 0}
-                        title={category.product_count > 0 ? 'No se puede eliminar: tiene productos' : ''}
-                      >
-                        Eliminar
-                      </button>
-                    </div>
-                  </td>
+
+                  {activeTab === 'active' ? (
+                    <>
+                      <td className="px-6 py-4 text-gray-600 text-sm max-w-xs truncate">
+                        {category.description || <span className="text-gray-400">-</span>}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${category.product_count > 0
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'bg-gray-100 text-gray-500'
+                          }`}>
+                          {category.product_count} producto{category.product_count !== 1 ? 's' : ''}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-gray-500 text-sm">
+                        {category.creator_name || <span className="text-gray-400">Sistema</span>}
+                      </td>
+                      <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => handleEdit(category)}
+                            className="px-3 py-1 text-blue-600 hover:bg-blue-50 rounded-lg text-sm cursor-pointer"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => handleDelete(category.id, category.product_count)}
+                            className={`px-3 py-1 rounded-lg text-sm cursor-pointer ${category.product_count > 0
+                              ? 'text-gray-400 cursor-not-allowed'
+                              : 'text-red-600 hover:bg-red-50'
+                              }`}
+                            disabled={category.product_count > 0}
+                            title={category.product_count > 0 ? 'No se puede eliminar: tiene productos' : ''}
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="px-6 py-4 text-gray-500 text-sm">
+                        {category.creator_name || <span className="text-gray-400">Sistema</span>}
+                      </td>
+                      <td className="px-6 py-4 text-gray-500 text-sm">
+                        {category.deleter_name || <span className="text-gray-400">Desconocido</span>}
+                      </td>
+                      <td className="px-6 py-4 text-gray-500 text-sm">
+                        {category.deleted_at ? new Date(category.deleted_at).toLocaleString() : '-'}
+                      </td>
+                    </>
+                  )}
                 </tr>
               ))
             )}

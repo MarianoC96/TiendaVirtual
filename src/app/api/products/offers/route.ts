@@ -85,6 +85,8 @@ export async function GET() {
                 // Keep the best discount found so far
                 if (!bestDiscount || amount > bestDiscount.amount) {
                     bestDiscount = {
+                        id: catDiscount.id,
+                        applies_to: 'category',
                         amount,
                         type: catDiscount.discount_type,
                         value: catDiscount.discount_value
@@ -105,6 +107,8 @@ export async function GET() {
 
                 if (!bestDiscount || amount > bestDiscount.amount) {
                     bestDiscount = {
+                        id: prodDiscount.id,
+                        applies_to: 'product',
                         amount,
                         type: prodDiscount.discount_type,
                         value: prodDiscount.discount_value

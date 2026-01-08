@@ -20,6 +20,14 @@ interface Product {
   review_count: number;
   short_description?: string;
   image_url?: string;
+  discount_info?: {
+    id?: number;
+    applies_to?: string;
+    amount: number;
+    type: string;
+    value: number;
+    label: string;
+  };
 }
 
 export default function ProductCard({ product }: { product: Product }) {
@@ -58,7 +66,8 @@ export default function ProductCard({ product }: { product: Product }) {
       image_url: product.image_url,
       short_description: product.short_description,
       stock: product.stock,
-      in_stock: isInStock
+      in_stock: isInStock,
+      discount_info: product.discount_info
     });
   };
 

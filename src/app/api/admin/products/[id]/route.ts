@@ -20,10 +20,15 @@ export async function DELETE(
       return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
     }
 
-    // Delete the product
+    // Soft delete
+    const deletedBy = "1"; // Mock Admin ID
+
     const { error } = await db
       .from('products')
-      .delete()
+      .update({
+        deleted_at: new Date().toISOString(),
+        deleted_by: deletedBy
+      })
       .eq('id', id);
 
     if (error) throw error;
@@ -45,9 +50,9 @@ export async function PATCH(
     const body = await request.json();
 
     const allowedFields = [
-      'name', 'category', 'category_id', 'price', 'original_price', 
+      'name', 'category', 'category_id', 'price', 'original_price',
       'discount_percentage', 'discount_end_date', 'in_stock', 'stock',
-      'description', 'short_description', 'image_url', 'is_featured', 
+      'description', 'short_description', 'image_url', 'is_featured',
       'is_on_sale', 'customizable', 'product_type', 'template_image'
     ];
 

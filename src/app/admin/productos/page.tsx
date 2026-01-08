@@ -14,6 +14,9 @@ interface Product {
   image_url?: string;
   description?: string;
   short_description?: string;
+  creator_name?: string;
+  deleter_name?: string;
+  deleted_at?: string;
 }
 
 interface Category {
@@ -33,17 +36,29 @@ export default function AdminProductsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
 
+
+  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
+  const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
+
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory ? product.category === selectedCategory : true;
+
+    if (activeTab === 'history') {
+      if (!product.deleted_at) return false;
+      const deletedMonth = product.deleted_at.slice(0, 7);
+      return matchesSearch && matchesCategory && deletedMonth === selectedMonth;
+    }
+
     return matchesSearch && matchesCategory;
   });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const url = activeTab === 'history' ? '/api/admin/products?deleted=true' : '/api/admin/products';
         const [productsRes, categoriesRes] = await Promise.all([
-          fetch('/api/products'),
+          fetch(url),
           fetch('/api/categories')
         ]);
         const productsData = await productsRes.json();
@@ -57,7 +72,11 @@ export default function AdminProductsPage() {
       }
     };
     fetchData();
-  }, []);
+  }, [activeTab]);
+
+  const handleTabChange = (tab: 'active' | 'history') => {
+    setActiveTab(tab);
+  };
 
   const handleDelete = async (id: number) => {
     if (!confirm('¿Estás seguro de eliminar este producto?')) return;
@@ -185,6 +204,38 @@ export default function AdminProductsPage() {
         </button>
       </div>
 
+      <div className="flex flex-col sm:flex-row justify-between items-end gap-4 mb-6">
+        <div className="flex bg-gray-100 p-1 rounded-xl">
+          <button
+            onClick={() => handleTabChange('active')}
+            className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'active'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
+              }`}
+          >
+            Activos
+          </button>
+          <button
+            onClick={() => handleTabChange('history')}
+            className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'history'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
+              }`}
+          >
+            Historial
+          </button>
+        </div>
+
+        {activeTab === 'history' && (
+          <input
+            type="month"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 outline-none"
+          />
+        )}
+      </div>
+
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         {/* Search and Filters */}
         <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row gap-4 justify-between items-center bg-gray-50/50">
@@ -221,9 +272,20 @@ export default function AdminProductsPage() {
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Producto</th>
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Categoría</th>
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Precio</th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Stock</th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Destacado</th>
-              <th className="px-6 py-4 text-right text-sm font-medium text-gray-500">Acciones</th>
+              {activeTab === 'active' ? (
+                <>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Stock</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Destacado</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Creado Por</th>
+                  <th className="px-6 py-4 text-right text-sm font-medium text-gray-500">Acciones</th>
+                </>
+              ) : (
+                <>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Creado Por</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Eliminado Por</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Fecha Eliminación</th>
+                </>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -244,35 +306,55 @@ export default function AdminProductsPage() {
                   </td>
                   <td className="px-6 py-4 text-gray-600">{product.category}</td>
                   <td className="px-6 py-4 text-gray-900 font-medium">S/ {product.price.toFixed(2)}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${product.stock < 10 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
-                      }`}>
-                      {product.stock}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    {product.is_featured ? (
-                      <span className="text-amber-500">⭐</span>
-                    ) : (
-                      <span className="text-gray-300">-</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => handleEdit(product)}
-                        className="px-3 py-1 text-blue-600 hover:bg-blue-50 rounded-lg text-sm cursor-pointer"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => handleDelete(product.id)}
-                        className="px-3 py-1 text-red-600 hover:bg-red-50 rounded-lg text-sm cursor-pointer"
-                      >
-                        Eliminar
-                      </button>
-                    </div>
-                  </td>
+
+                  {activeTab === 'active' ? (
+                    <>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${product.stock < 10 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+                          }`}>
+                          {product.stock}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {product.is_featured ? (
+                          <span className="text-amber-500">⭐</span>
+                        ) : (
+                          <span className="text-gray-300">-</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-gray-500 text-sm">
+                        {product.creator_name || <span className="text-gray-400">Sistema</span>}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => handleEdit(product)}
+                            className="px-3 py-1 text-blue-600 hover:bg-blue-50 rounded-lg text-sm cursor-pointer"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => handleDelete(product.id)}
+                            className="px-3 py-1 text-red-600 hover:bg-red-50 rounded-lg text-sm cursor-pointer"
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="px-6 py-4 text-gray-500 text-sm">
+                        {product.creator_name || <span className="text-gray-400">Sistema</span>}
+                      </td>
+                      <td className="px-6 py-4 text-gray-500 text-sm">
+                        {product.deleter_name || <span className="text-gray-400">Desconocido</span>}
+                      </td>
+                      <td className="px-6 py-4 text-gray-500 text-sm">
+                        {product.deleted_at ? new Date(product.deleted_at).toLocaleString() : '-'}
+                      </td>
+                    </>
+                  )}
                 </tr>
               ))
             ) : (
@@ -287,167 +369,169 @@ export default function AdminProductsPage() {
       </div>
 
       {/* Modal de Edición */}
-      {showModal && editingProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          {/* Overlay */}
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={closeModal}
-          />
+      {
+        showModal && editingProduct && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            {/* Overlay */}
+            <div
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={closeModal}
+            />
 
-          {/* Modal Content */}
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto m-4">
-            <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-gray-900">
-                {editingProduct.id === 0 ? 'Nuevo Producto' : 'Editar Producto'}
-              </h2>
-              <button
-                onClick={closeModal}
-                className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4">
-              {/* Nombre */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre del producto
-                </label>
-                <input
-                  type="text"
-                  value={editingProduct.name}
-                  onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                />
-              </div>
-
-              {/* Categoría */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Categoría
-                </label>
-                <select
-                  value={editingProduct.category_id || ''}
-                  onChange={(e) => setEditingProduct({ ...editingProduct, category_id: parseInt(e.target.value) })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+            {/* Modal Content */}
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto m-4">
+              <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+                <h2 className="text-xl font-bold text-gray-900">
+                  {editingProduct.id === 0 ? 'Nuevo Producto' : 'Editar Producto'}
+                </h2>
+                <button
+                  onClick={closeModal}
+                  className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
                 >
-                  <option value="">Seleccionar categoría</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                  ))}
-                </select>
+                  ×
+                </button>
               </div>
 
-              {/* Precio y Stock */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="p-6 space-y-4">
+                {/* Nombre */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Precio (S/)
+                    Nombre del producto
                   </label>
                   <input
-                    type="number"
-                    step="0.01"
-                    value={editingProduct.price}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, price: parseFloat(e.target.value) || 0 })}
+                    type="text"
+                    value={editingProduct.name}
+                    onChange={(e) => setEditingProduct(prev => prev ? { ...prev, name: e.target.value } : null)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                   />
                 </div>
+
+                {/* Categoría */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Stock
+                    Categoría
+                  </label>
+                  <select
+                    value={editingProduct.category_id || ''}
+                    onChange={(e) => setEditingProduct(prev => prev ? { ...prev, category_id: parseInt(e.target.value) } : null)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                  >
+                    <option value="">Seleccionar categoría</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Precio y Stock */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Precio (S/)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingProduct.price}
+                      onChange={(e) => setEditingProduct(prev => prev ? { ...prev, price: parseFloat(e.target.value) || 0 } : null)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Stock
+                    </label>
+                    <input
+                      type="number"
+                      value={editingProduct.stock}
+                      onChange={(e) => setEditingProduct(prev => prev ? { ...prev, stock: parseInt(e.target.value) || 0 } : null)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
+                {/* URL de Imagen */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    URL de la imagen
                   </label>
                   <input
-                    type="number"
-                    value={editingProduct.stock}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, stock: parseInt(e.target.value) || 0 })}
+                    type="url"
+                    value={editingProduct.image_url || ''}
+                    onChange={(e) => setEditingProduct(prev => prev ? { ...prev, image_url: e.target.value } : null)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    placeholder="https://ejemplo.com/imagen.jpg"
+                  />
+                </div>
+
+                {/* Descripción corta */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Descripción corta
+                  </label>
+                  <input
+                    type="text"
+                    value={editingProduct.short_description || ''}
+                    onChange={(e) => setEditingProduct(prev => prev ? { ...prev, short_description: e.target.value } : null)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                   />
                 </div>
+
+                {/* Descripción */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Descripción completa
+                  </label>
+                  <textarea
+                    value={editingProduct.description || ''}
+                    onChange={(e) => setEditingProduct(prev => prev ? { ...prev, description: e.target.value } : null)}
+                    rows={3}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent resize-none"
+                  />
+                </div>
+
+                {/* Destacado */}
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="is_featured"
+                    checked={editingProduct.is_featured === 1}
+                    onChange={(e) => setEditingProduct(prev => prev ? { ...prev, is_featured: e.target.checked ? 1 : 0 } : null)}
+                    className="w-5 h-5 text-rose-600 border-gray-300 rounded focus:ring-rose-500"
+                  />
+                  <label htmlFor="is_featured" className="text-sm font-medium text-gray-700">
+                    Producto destacado ⭐
+                  </label>
+                </div>
               </div>
 
-              {/* URL de Imagen */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  URL de la imagen
-                </label>
-                <input
-                  type="url"
-                  value={editingProduct.image_url || ''}
-                  onChange={(e) => setEditingProduct({ ...editingProduct, image_url: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                  placeholder="https://ejemplo.com/imagen.jpg"
-                />
+              {/* Footer con botones */}
+              <div className="sticky bottom-0 bg-gray-50 border-t px-6 py-4 flex justify-end gap-3">
+                <button
+                  onClick={closeModal}
+                  className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={saving || !editingProduct.name || !editingProduct.price || !editingProduct.category_id}
+                  className="px-4 py-2 bg-rose-600 text-white rounded-xl hover:bg-rose-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {saving ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Guardando...
+                    </>
+                  ) : (
+                    'Guardar cambios'
+                  )}
+                </button>
               </div>
-
-              {/* Descripción corta */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Descripción corta
-                </label>
-                <input
-                  type="text"
-                  value={editingProduct.short_description || ''}
-                  onChange={(e) => setEditingProduct({ ...editingProduct, short_description: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                />
-              </div>
-
-              {/* Descripción */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Descripción completa
-                </label>
-                <textarea
-                  value={editingProduct.description || ''}
-                  onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent resize-none"
-                />
-              </div>
-
-              {/* Destacado */}
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  id="is_featured"
-                  checked={editingProduct.is_featured === 1}
-                  onChange={(e) => setEditingProduct({ ...editingProduct, is_featured: e.target.checked ? 1 : 0 })}
-                  className="w-5 h-5 text-rose-600 border-gray-300 rounded focus:ring-rose-500"
-                />
-                <label htmlFor="is_featured" className="text-sm font-medium text-gray-700">
-                  Producto destacado ⭐
-                </label>
-              </div>
-            </div>
-
-            {/* Footer con botones */}
-            <div className="sticky bottom-0 bg-gray-50 border-t px-6 py-4 flex justify-end gap-3">
-              <button
-                onClick={closeModal}
-                className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={saving || !editingProduct.name || !editingProduct.price || !editingProduct.category_id}
-                className="px-4 py-2 bg-rose-600 text-white rounded-xl hover:bg-rose-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {saving ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Guardando...
-                  </>
-                ) : (
-                  'Guardar cambios'
-                )}
-              </button>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
     </div>
   );
 }

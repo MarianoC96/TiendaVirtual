@@ -1,23 +1,33 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    // Filter non-deleted coupons
-    const { data: coupons, error } = await db
+    const { searchParams } = new URL(request.url);
+    const deleted = searchParams.get('deleted') === 'true';
+
+    // Filter non-deleted coupons by default, or deleted if requested
+    let query = db
       .from('coupons')
       .select('*')
-      .is('deleted_at', null)
-      .order('id', { ascending: false });
+      .order(deleted ? 'deleted_at' : 'id', { ascending: false });
+
+    if (deleted) {
+      query = query.not('deleted_at', 'is', null);
+    } else {
+      query = query.is('deleted_at', null);
+    }
+
+    const { data: coupons, error } = await query;
 
     if (error) throw error;
 
     // Enrich with creator and deactivator details...
-    // (Existing enrichment logic remains, just ensuring we filter deleted first)
     const enrichedCoupons = await Promise.all(
       (coupons || []).map(async (coupon) => {
         let creator_name = null;
         let deactivator_name = null;
+        let deleter_name = null;
 
         if (coupon.created_by) {
           const { data: creator } = await db
@@ -37,6 +47,16 @@ export async function GET() {
           deactivator_name = deactivator?.name;
         }
 
+        if (deleted && coupon.deleted_by) {
+          const deleterId = parseInt(coupon.deleted_by);
+          if (!isNaN(deleterId)) {
+            const { data: deleter } = await db.from('users').select('name').eq('id', deleterId).single();
+            deleter_name = deleter?.name;
+          } else {
+            deleter_name = coupon.deleted_by;
+          }
+        }
+
         // Enrich target name if needed (optional optimization)
         let target_name = null;
         if (coupon.applies_to === 'product' && coupon.target_id) {
@@ -47,7 +67,7 @@ export async function GET() {
           target_name = c?.name;
         }
 
-        return { ...coupon, creator_name, deactivator_name, target_name };
+        return { ...coupon, creator_name, deactivator_name, deleter_name, target_name };
       })
     );
 

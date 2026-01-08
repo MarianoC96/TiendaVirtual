@@ -22,6 +22,8 @@ interface Coupon {
   target_id: number;
   usage_limit_per_user: number;
   expires_at: string | null;
+  deactivator_name?: string;
+  deleter_name?: string;
   target_name?: string;
 }
 
@@ -45,10 +47,21 @@ export default function AdminCouponsPage() {
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredCoupons = coupons.filter(coupon =>
-    coupon.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    coupon.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
+  const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
+
+  const filteredCoupons = coupons.filter(coupon => {
+    const matchesSearch = coupon.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      coupon.name.toLowerCase().includes(searchQuery.toLowerCase());
+
+    if (activeTab === 'history') {
+      if (!coupon.deleted_at) return false;
+      const deletedMonth = coupon.deleted_at.slice(0, 7);
+      return matchesSearch && deletedMonth === selectedMonth;
+    }
+
+    return matchesSearch;
+  });
 
   const [formData, setFormData] = useState({
     code: '',
@@ -67,11 +80,12 @@ export default function AdminCouponsPage() {
     fetchCoupons();
     fetchProducts();
     fetchCategories();
-  }, []);
+  }, [activeTab]); // Depend on activeTab
 
   const fetchCoupons = async () => {
     try {
-      const res = await fetch('/api/admin/coupons');
+      const url = activeTab === 'history' ? '/api/admin/coupons?deleted=true' : '/api/admin/coupons';
+      const res = await fetch(url);
       const data = await res.json();
       setCoupons(data);
     } catch (error) {
@@ -209,6 +223,10 @@ export default function AdminCouponsPage() {
     return [];
   };
 
+  const handleTabChange = (tab: 'active' | 'history') => {
+    setActiveTab(tab);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -230,6 +248,38 @@ export default function AdminCouponsPage() {
         >
           <span className="text-xl leading-none">+</span> Nuevo Cupón
         </button>
+      </div>
+
+      <div className="flex flex-col sm:flex-row justify-between items-end gap-4 mb-6">
+        <div className="flex bg-gray-100 p-1 rounded-xl">
+          <button
+            onClick={() => handleTabChange('active')}
+            className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'active'
+              ? 'bg-white text-gray-900 shadow-sm'
+              : 'text-gray-500 hover:text-gray-700'
+              }`}
+          >
+            Activos
+          </button>
+          <button
+            onClick={() => handleTabChange('history')}
+            className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'history'
+              ? 'bg-white text-gray-900 shadow-sm'
+              : 'text-gray-500 hover:text-gray-700'
+              }`}
+          >
+            Historial
+          </button>
+        </div>
+
+        {activeTab === 'history' && (
+          <input
+            type="month"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 outline-none"
+          />
+        )}
       </div>
 
       {/* Info Banner */}
@@ -453,9 +503,20 @@ export default function AdminCouponsPage() {
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Código</th>
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Descuento</th>
               <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Aplicable a</th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Uso</th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Estado</th>
-              <th className="px-6 py-4 text-right text-sm font-medium text-gray-500">Acciones</th>
+              {activeTab === 'active' ? (
+                <>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Uso</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Creado Por</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Estado</th>
+                  <th className="px-6 py-4 text-right text-sm font-medium text-gray-500">Acciones</th>
+                </>
+              ) : (
+                <>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Creado Por</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Eliminado Por</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Fecha Eliminación</th>
+                </>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -498,53 +559,72 @@ export default function AdminCouponsPage() {
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600 space-y-1">
-                    <div>
-                      <span className="font-medium text-gray-900">{coupon.uses}</span>
-                      <span className="text-gray-400"> / {coupon.max_uses || '∞'} total</span>
-                    </div>
-                    {coupon.usage_limit_per_user > 0 && (
-                      <div className="text-xs text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded w-fit">
-                        Lim. Usuario: {coupon.usage_limit_per_user}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${coupon.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-                      }`}>
-                      {coupon.active ? 'Activo' : 'Inactivo'}
-                    </span>
-                    {coupon.expires_at && (
-                      <div className={`text-xs mt-1 ${new Date(coupon.expires_at) < new Date() ? 'text-red-500 font-medium' : 'text-gray-500'}`}>
-                        Exp: {new Date(coupon.expires_at).toLocaleDateString('es-PE')}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => handleToggle(coupon.id, coupon.active)}
-                        className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${coupon.active
-                          ? 'text-amber-600 hover:bg-amber-50'
-                          : 'text-green-600 hover:bg-green-50'
-                          }`}
-                      >
-                        {coupon.active ? 'Pausar' : 'Activar'}
-                      </button>
-                      <button
-                        onClick={() => handleEdit(coupon)}
-                        className="px-3 py-1 text-blue-600 hover:bg-blue-50 rounded-lg text-sm font-medium transition-colors"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => handleDelete(coupon.id)}
-                        className="px-3 py-1 text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium transition-colors"
-                      >
-                        Eliminar
-                      </button>
-                    </div>
-                  </td>
+                  {activeTab === 'active' ? (
+                    <>
+                      <td className="px-6 py-4 text-sm text-gray-600 space-y-1">
+                        <div>
+                          <span className="font-medium text-gray-900">{coupon.uses}</span>
+                          <span className="text-gray-400"> / {coupon.max_uses || '∞'} total</span>
+                        </div>
+                        {coupon.usage_limit_per_user > 0 && (
+                          <div className="text-xs text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded w-fit">
+                            Lim. Usuario: {coupon.usage_limit_per_user}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-gray-500 text-sm">
+                        {coupon.creator_name || <span className="text-gray-400">Sistema</span>}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${coupon.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                          }`}>
+                          {coupon.active ? 'Activo' : 'Inactivo'}
+                        </span>
+                        {coupon.expires_at && (
+                          <div className={`text-xs mt-1 ${new Date(coupon.expires_at) < new Date() ? 'text-red-500 font-medium' : 'text-gray-500'}`}>
+                            Exp: {new Date(coupon.expires_at).toLocaleDateString('es-PE')}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => handleToggle(coupon.id, coupon.active)}
+                            className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${coupon.active
+                              ? 'text-amber-600 hover:bg-amber-50'
+                              : 'text-green-600 hover:bg-green-50'
+                              }`}
+                          >
+                            {coupon.active ? 'Pausar' : 'Activar'}
+                          </button>
+                          <button
+                            onClick={() => handleEdit(coupon)}
+                            className="px-3 py-1 text-blue-600 hover:bg-blue-50 rounded-lg text-sm font-medium transition-colors"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => handleDelete(coupon.id)}
+                            className="px-3 py-1 text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium transition-colors"
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="px-6 py-4 text-gray-500 text-sm">
+                        {coupon.creator_name || <span className="text-gray-400">Sistema</span>}
+                      </td>
+                      <td className="px-6 py-4 text-gray-500 text-sm">
+                        {coupon.deleter_name || <span className="text-gray-400">Desconocido</span>}
+                      </td>
+                      <td className="px-6 py-4 text-gray-500 text-sm">
+                        {coupon.deleted_at ? new Date(coupon.deleted_at).toLocaleString() : '-'}
+                      </td>
+                    </>
+                  )}
                 </tr>
               ))
             )}
