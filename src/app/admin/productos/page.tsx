@@ -89,13 +89,33 @@ export default function AdminProductsPage() {
     }
   };
 
+  const handleCreate = () => {
+    setEditingProduct({
+      id: 0, // ID 0 indicates new product
+      name: '',
+      category: '',
+      category_id: 0,
+      price: 0,
+      stock: 0,
+      is_featured: 0,
+      image_url: '',
+      description: '',
+      short_description: ''
+    });
+    setShowModal(true);
+  };
+
   const handleSave = async () => {
     if (!editingProduct) return;
 
     setSaving(true);
     try {
-      const res = await fetch(`/api/admin/products/${editingProduct.id}`, {
-        method: 'PATCH',
+      const isNew = editingProduct.id === 0;
+      const url = isNew ? '/api/admin/products' : `/api/admin/products/${editingProduct.id}`;
+      const method = isNew ? 'POST' : 'PATCH';
+
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: editingProduct.name,
@@ -110,17 +130,27 @@ export default function AdminProductsPage() {
       });
 
       if (res.ok) {
+        const savedProduct = await res.json();
         // Update product in list
         const updatedCategory = categories.find(c => c.id === editingProduct.category_id);
-        setProducts(products.map(p =>
-          p.id === editingProduct.id
-            ? { ...editingProduct, category: updatedCategory?.name || editingProduct.category }
-            : p
-        ));
+        const productWithCategory = {
+          ...savedProduct,
+          category: updatedCategory?.name || 'Sin Categoría'
+        };
+
+        if (isNew) {
+          setProducts([productWithCategory, ...products]);
+        } else {
+          setProducts(products.map(p =>
+            p.id === editingProduct.id ? productWithCategory : p
+          ));
+        }
+
         setShowModal(false);
         setEditingProduct(null);
       } else {
-        alert('Error al guardar los cambios');
+        const errorData = await res.json();
+        alert(errorData.error || 'Error al guardar los cambios');
       }
     } catch (error) {
       console.error('Error saving product:', error);
@@ -147,12 +177,12 @@ export default function AdminProductsPage() {
     <div>
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Productos</h1>
-        <Link
-          href="/admin/productos/nuevo"
-          className="px-4 py-2 bg-rose-600 text-white rounded-xl font-medium hover:bg-rose-700 transition-colors"
+        <button
+          onClick={handleCreate}
+          className="px-4 py-2 bg-rose-600 text-white rounded-xl font-medium hover:bg-rose-700 transition-colors shadow-lg shadow-rose-200 cursor-pointer"
         >
           + Nuevo Producto
-        </Link>
+        </button>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
@@ -268,7 +298,9 @@ export default function AdminProductsPage() {
           {/* Modal Content */}
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto m-4">
             <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-gray-900">Editar Producto</h2>
+              <h2 className="text-xl font-bold text-gray-900">
+                {editingProduct.id === 0 ? 'Nuevo Producto' : 'Editar Producto'}
+              </h2>
               <button
                 onClick={closeModal}
                 className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
@@ -400,7 +432,7 @@ export default function AdminProductsPage() {
               </button>
               <button
                 onClick={handleSave}
-                disabled={saving}
+                disabled={saving || !editingProduct.name || !editingProduct.price || !editingProduct.category_id}
                 className="px-4 py-2 bg-rose-600 text-white rounded-xl hover:bg-rose-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {saving ? (
