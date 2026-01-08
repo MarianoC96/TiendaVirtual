@@ -55,12 +55,13 @@ const MONTHS = [
     { value: 12, label: 'Diciembre' }
 ];
 
-const STATUS_LABELS: Record<string, string> = {
-    pending: 'Pendiente',
-    processing: 'Procesando',
-    shipped: 'Enviado',
-    delivered: 'Entregado',
-    cancelled: 'Cancelado'
+const STATUS_LABELS: Record<string, { label: string; color: string }> = {
+    pending: { label: 'Pendiente', color: 'bg-gray-100 text-gray-700' },
+    processing: { label: 'Procesando', color: 'bg-cyan-100 text-cyan-700' },
+    transit: { label: 'En Tránsito', color: 'bg-orange-100 text-orange-700' },
+    shipped: { label: 'Enviado', color: 'bg-orange-100 text-orange-700' },
+    delivered: { label: 'Entregado', color: 'bg-green-100 text-green-700' },
+    cancelled: { label: 'Cancelado', color: 'bg-red-100 text-red-700' }
 };
 
 export default function HistorialPedidosPage() {
@@ -71,9 +72,10 @@ export default function HistorialPedidosPage() {
     const [exporting, setExporting] = useState(false);
     const [viewingOrder, setViewingOrder] = useState<Order | null>(null);
 
-    // Generate year options (from 2024 to current year + 1)
+    // Generate year options (from 2026 to current year + 1)
     const currentYear = new Date().getFullYear();
-    const yearOptions = Array.from({ length: currentYear - 2023 }, (_, i) => 2024 + i);
+    const startYear = 2026;
+    const yearOptions = Array.from({ length: Math.max(currentYear - startYear + 2, 1) }, (_, i) => startYear + i);
 
     useEffect(() => {
         fetchOrders();
@@ -392,13 +394,9 @@ export default function HistorialPedidosPage() {
                                         S/ {order.total.toFixed(2)}
                                     </td>
                                     <td className="px-4 py-4">
-                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${order.status === 'delivered' ? 'bg-green-100 text-green-700' :
-                                                order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
-                                                    order.status === 'shipped' ? 'bg-purple-100 text-purple-700' :
-                                                        order.status === 'processing' ? 'bg-blue-100 text-blue-700' :
-                                                            'bg-yellow-100 text-yellow-700'
+                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_LABELS[order.status]?.color || 'bg-gray-100 text-gray-700'
                                             }`}>
-                                            {STATUS_LABELS[order.status] || order.status}
+                                            {STATUS_LABELS[order.status]?.label || order.status}
                                         </span>
                                     </td>
                                     <td className="px-4 py-4">

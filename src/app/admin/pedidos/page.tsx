@@ -53,9 +53,9 @@ interface Order {
 }
 
 const STATUS_OPTIONS = [
-  { value: 'pending', label: 'Pendiente', color: 'bg-yellow-100 text-yellow-700' },
-  { value: 'processing', label: 'Procesando', color: 'bg-blue-100 text-blue-700' },
-  { value: 'shipped', label: 'Enviando', color: 'bg-purple-100 text-purple-700' },
+  { value: 'pending', label: 'Pendiente', color: 'bg-gray-100 text-gray-700' },
+  { value: 'processing', label: 'Procesando', color: 'bg-cyan-100 text-cyan-700' },
+  { value: 'transit', label: 'En Tránsito', color: 'bg-orange-100 text-orange-700' },
   { value: 'delivered', label: 'Entregado', color: 'bg-green-100 text-green-700' },
   { value: 'cancelled', label: 'Cancelado', color: 'bg-red-100 text-red-700' }
 ];

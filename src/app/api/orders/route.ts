@@ -11,6 +11,36 @@ interface OrderItem {
   quantity: number;
 }
 
+// GET: Listar pedidos (filtrados por userId si se proporciona)
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+
+    let query = db
+      .from('orders')
+      .select('*')
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false });
+
+    if (userId) {
+      query = query.eq('user_id', userId);
+    }
+
+    const { data: orders, error } = await query;
+
+    if (error) throw error;
+
+    return NextResponse.json(orders || []);
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    return NextResponse.json(
+      { error: 'Error al obtener pedidos' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const {
