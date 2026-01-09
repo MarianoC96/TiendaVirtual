@@ -133,11 +133,11 @@ export default function AdminPerfilPage() {
                     </div>
 
                     {/* Permissions (for workers) */}
-                    {isWorker && user?.permissions && (
+                    {isWorker && (user as any)?.permissions && (
                         <div className="bg-white rounded-2xl shadow-sm p-6">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4">Permisos asignados</h3>
                             <div className="flex flex-wrap gap-2">
-                                {(user.permissions as string[]).map((permission) => (
+                                {((user as any).permissions as string[]).map((permission) => (
                                     <span
                                         key={permission}
                                         className="px-3 py-1.5 bg-teal-50 text-teal-700 rounded-full text-sm font-medium capitalize"
