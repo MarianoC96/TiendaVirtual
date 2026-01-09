@@ -223,7 +223,7 @@ export default function AdminDiscountsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-rose-600 border-t-transparent" />
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-teal-600 border-t-transparent" />
       </div>
     );
   }
@@ -237,7 +237,7 @@ export default function AdminDiscountsPage() {
         </div>
         <button
           onClick={() => { resetForm(); setShowForm(true); }}
-          className="flex items-center gap-2 px-6 py-2.5 bg-rose-600 text-white rounded-xl font-medium hover:bg-rose-700 transition-colors shadow-sm hover:shadow-md cursor-pointer"
+          className="flex items-center gap-2 px-6 py-2.5 bg-teal-600 text-white rounded-xl font-medium hover:bg-teal-700 transition-colors shadow-sm hover:shadow-md cursor-pointer"
         >
           <span className="text-xl leading-none">+</span> Nuevo Descuento
         </button>
@@ -270,7 +270,7 @@ export default function AdminDiscountsPage() {
             type="month"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 outline-none"
+            className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-200 outline-none"
           />
         )}
       </div>
@@ -292,7 +292,7 @@ export default function AdminDiscountsPage() {
           placeholder="Buscar descuento por nombre..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 transition-all outline-none bg-white shadow-sm"
+          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-500 transition-all outline-none bg-white shadow-sm"
         />
         <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -309,7 +309,7 @@ export default function AdminDiscountsPage() {
 
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-rose-500 to-rose-600 px-6 py-4 flex justify-between items-center sticky top-0 z-10">
+            <div className="bg-gradient-to-r from-teal-500 to-teal-600 px-6 py-4 flex justify-between items-center sticky top-0 z-10">
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
                 <span>{editingDiscount ? '✏️' : '🏷️'}</span>
                 {editingDiscount ? 'Editar Descuento' : 'Nuevo Descuento'}
@@ -339,7 +339,7 @@ export default function AdminDiscountsPage() {
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       required
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 transition-all outline-none"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-500 transition-all outline-none"
                       placeholder="Ej: Descuento de Verano"
                     />
                   </div>
@@ -349,7 +349,7 @@ export default function AdminDiscountsPage() {
                     <select
                       value={formData.discount_type}
                       onChange={(e) => setFormData({ ...formData, discount_type: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 transition-all outline-none appearance-none bg-white"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-500 transition-all outline-none appearance-none bg-white"
                     >
                       <option value="percentage">Porcentaje (%)</option>
                       <option value="fixed">Monto Fijo (S/)</option>
@@ -371,7 +371,7 @@ export default function AdminDiscountsPage() {
                         required
                         min="0"
                         max={formData.discount_type === 'percentage' ? 80 : undefined}
-                        className={`w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 transition-all outline-none ${formData.discount_type === 'fixed' ? 'pl-8' : ''}`}
+                        className={`w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-500 transition-all outline-none ${formData.discount_type === 'fixed' ? 'pl-8' : ''}`}
                       />
                       {formData.discount_type === 'percentage' && (
                         <span className="absolute right-3 top-2.5 text-gray-500">%</span>
@@ -384,7 +384,7 @@ export default function AdminDiscountsPage() {
                     <select
                       value={formData.applies_to}
                       onChange={(e) => setFormData({ ...formData, applies_to: e.target.value, target_id: 0 })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 transition-all outline-none appearance-none bg-white"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-500 transition-all outline-none appearance-none bg-white"
                     >
                       <option value="product">Producto Específico</option>
                       <option value="category">Categoría Completa</option>
@@ -406,7 +406,7 @@ export default function AdminDiscountsPage() {
                           required
                           min="1"
                           step="0.01"
-                          className="w-full px-4 py-2.5 pl-8 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 transition-all outline-none"
+                          className="w-full px-4 py-2.5 pl-8 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-500 transition-all outline-none"
                           placeholder="0.00"
                         />
                       </div>
@@ -421,7 +421,7 @@ export default function AdminDiscountsPage() {
                         value={formData.target_id}
                         onChange={(e) => setFormData({ ...formData, target_id: parseInt(e.target.value) })}
                         required
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 transition-all outline-none appearance-none bg-white"
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-500 transition-all outline-none appearance-none bg-white"
                       >
                         <option value={0}>Seleccionar...</option>
                         {getTargetOptions().map(opt => (
@@ -437,7 +437,7 @@ export default function AdminDiscountsPage() {
                       type="date"
                       value={formData.start_date}
                       onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 transition-all outline-none"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-500 transition-all outline-none"
                     />
                   </div>
 
@@ -447,7 +447,7 @@ export default function AdminDiscountsPage() {
                       type="date"
                       value={formData.end_date}
                       onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 transition-all outline-none"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-500 transition-all outline-none"
                     />
                   </div>
                 </div>
@@ -462,7 +462,7 @@ export default function AdminDiscountsPage() {
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-3 bg-rose-600 text-white rounded-xl hover:bg-rose-700 font-medium shadow-sm hover:shadow hover:-translate-y-0.5 transition-all cursor-pointer"
+                    className="flex-1 px-4 py-3 bg-teal-600 text-white rounded-xl hover:bg-teal-700 font-medium shadow-sm hover:shadow hover:-translate-y-0.5 transition-all cursor-pointer"
                   >
                     {editingDiscount ? 'Guardar Cambios' : 'Crear Descuento'}
                   </button>
@@ -518,10 +518,10 @@ export default function AdminDiscountsPage() {
                   <td className="px-6 py-4">
                     <div>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${discount.applies_to === 'product'
-                        ? 'bg-blue-100 text-blue-700'
+                        ? 'bg-teal-100 text-teal-700'
                         : discount.applies_to === 'category'
                           ? 'bg-purple-100 text-purple-700'
-                          : 'bg-emerald-100 text-emerald-700'
+                          : 'bg-teal-100 text-teal-700'
                         }`}>
                         {discount.applies_to === 'product' ? 'Producto' : discount.applies_to === 'category' ? 'Categoría' : 'Carrito'}
                       </span>
@@ -567,7 +567,7 @@ export default function AdminDiscountsPage() {
                           </button>
                           <button
                             onClick={() => handleEdit(discount)}
-                            className="px-3 py-1 text-blue-600 hover:bg-blue-50 rounded-lg text-sm"
+                            className="px-3 py-1 text-teal-600 hover:bg-teal-50 rounded-lg text-sm"
                           >
                             Editar
                           </button>

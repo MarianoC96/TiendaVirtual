@@ -75,7 +75,7 @@ export default function ProductCard({ product }: { product: Product }) {
     <Link href={`/producto/${product.id}`} className="block group">
       <div className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
         {/* Image Container */}
-        <div className="relative aspect-square bg-gradient-to-br from-rose-50 to-orange-50 overflow-hidden">
+        <div className="relative aspect-square bg-gradient-to-br from-teal-50 to-cyan-50 overflow-hidden">
           <img
             src={product.image_url || 'https://via.placeholder.com/300x300/fef2f2/666?text=☕'}
             alt={product.name}
@@ -101,7 +101,7 @@ export default function ProductCard({ product }: { product: Product }) {
             onClick={handleAddToCart}
             disabled={!isInStock}
             className={`absolute bottom-3 right-3 w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all ${isInStock
-              ? 'bg-rose-600 text-white hover:bg-rose-700 hover:scale-110'
+              ? 'bg-teal-600 text-white hover:bg-teal-700 hover:scale-110'
               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
           >
@@ -118,12 +118,12 @@ export default function ProductCard({ product }: { product: Product }) {
         {/* Content */}
         <div className="p-4">
           {/* Category */}
-          <p className="text-xs text-rose-600 font-medium uppercase tracking-wide mb-1">
+          <p className="text-xs text-teal-600 font-medium uppercase tracking-wide mb-1">
             {product.category_name || product.category}
           </p>
 
           {/* Name */}
-          <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-rose-600 transition-colors">
+          <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-teal-600 transition-colors">
             {product.name}
           </h3>
 

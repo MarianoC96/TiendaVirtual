@@ -15,7 +15,7 @@ export default function Newsletter() {
   };
 
   return (
-    <section className="py-16 bg-gradient-to-br from-indigo-900 via-indigo-800 to-purple-900 text-white">
+    <section className="py-16 bg-gradient-to-br from-teal-700 via-teal-600 to-cyan-600 text-white">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         {/* Icon */}
         <div className="inline-flex items-center justify-center w-16 h-16 bg-white/10 rounded-full mb-6">
@@ -28,7 +28,7 @@ export default function Newsletter() {
           ¡Suscríbete a nuestro Newsletter!
         </h2>
 
-        <p className="text-lg text-indigo-200 mb-8 max-w-xl mx-auto">
+        <p className="text-lg text-teal-200 mb-8 max-w-xl mx-auto">
           Recibe las mejores ofertas y novedades directamente en tu correo.
         </p>
 
@@ -40,7 +40,7 @@ export default function Newsletter() {
               </svg>
             </div>
             <h3 className="text-xl font-semibold mb-2">¡Gracias por suscribirte!</h3>
-            <p className="text-indigo-200">Pronto recibirás noticias nuestras.</p>
+            <p className="text-teal-200">Pronto recibirás noticias nuestras.</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 justify-center max-w-lg mx-auto">
@@ -56,12 +56,12 @@ export default function Newsletter() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 bg-white text-gray-900 rounded-full focus:outline-none focus:ring-4 focus:ring-purple-400/50"
+                className="w-full pl-12 pr-4 py-4 bg-white text-gray-900 rounded-full focus:outline-none focus:ring-4 focus:ring-teal-400/50"
               />
             </div>
             <button
               type="submit"
-              className="px-8 py-4 bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
+              className="px-8 py-4 bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-bold rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
             >
               Suscribirse
             </button>

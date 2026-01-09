@@ -22,6 +22,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   // Verificar acceso al panel admin
   useEffect(() => {
@@ -55,8 +56,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent" />
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--background)' }}>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-teal-600 border-t-transparent" />
       </div>
     );
   }
@@ -71,7 +72,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   });
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA]">
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
       {/* Admin Header */}
       <header className="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-40">
         <div className="flex items-center justify-between px-4 lg:px-6 h-16">
@@ -79,7 +80,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {/* Mobile menu button */}
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden p-2 text-gray-600 hover:text-indigo-600 hover:bg-gray-100 rounded-lg"
+              className="lg:hidden p-2 text-gray-600 hover:text-teal-600 hover:bg-gray-100 rounded-lg"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -88,37 +89,80 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
             <Link href="/admin" className="flex items-center gap-2">
               <span className="text-xl lg:text-2xl">☕</span>
-              <span className="text-lg lg:text-xl font-bold text-indigo-600 hidden sm:inline">CustomCups</span>
-              <span className="text-xs bg-indigo-50 text-indigo-600 px-2 py-1 rounded-full font-medium hidden sm:inline">
+              <span className="text-lg lg:text-xl font-bold text-teal-600 hidden sm:inline">CustomCups</span>
+              <span className="text-xs bg-teal-50 text-teal-600 px-2 py-1 rounded-full font-medium hidden sm:inline">
                 {isAdmin ? 'Admin' : 'Staff'}
               </span>
             </Link>
           </div>
 
           <div className="flex items-center gap-2 lg:gap-4">
-            <Link href="/" className="text-gray-500 hover:text-indigo-600 text-sm transition-colors hidden sm:block">
+            <Link href="/" className="text-gray-500 hover:text-teal-600 text-sm transition-colors hidden sm:block">
               Ver Tienda
             </Link>
             <div className="hidden sm:block h-6 w-px bg-gray-200" />
-            <div className="flex items-center gap-2 lg:gap-3">
-              <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
-                <span className="text-indigo-600 font-medium text-sm">
-                  {user?.name?.charAt(0).toUpperCase()}
-                </span>
-              </div>
-              <div className="hidden md:block">
-                <p className="text-sm font-medium text-gray-900">{user?.name}</p>
-                <p className="text-xs text-gray-500">{isAdmin ? 'Administrador' : 'Staff'}</p>
-              </div>
+            <div className="flex items-center gap-2 lg:gap-3 relative">
               <button
-                onClick={logout}
-                className="text-gray-400 hover:text-red-500 transition-colors p-1"
-                title="Cerrar sesión"
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="flex items-center gap-2 lg:gap-3 hover:bg-gray-50 rounded-xl px-2 py-1.5 transition-colors cursor-pointer"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
+                  <span className="text-teal-600 font-medium text-sm">
+                    {user?.name?.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div className="hidden md:block text-left">
+                  <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+                  <p className="text-xs text-gray-500">{isAdmin ? 'Administrador' : 'Staff'}</p>
+                </div>
+                <svg className={`w-4 h-4 text-gray-400 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
+
+              {/* User Dropdown Menu */}
+              {showUserMenu && (
+                <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+                  <div className="px-4 py-3 border-b border-gray-100">
+                    <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+                    <p className="text-xs text-gray-500">{user?.email}</p>
+                  </div>
+                  <Link
+                    href="/admin/perfil"
+                    onClick={() => setShowUserMenu(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    Mi Perfil
+                  </Link>
+                  <Link
+                    href="/"
+                    onClick={() => setShowUserMenu(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-gray-50 transition-colors sm:hidden"
+                  >
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    Ver Tienda
+                  </Link>
+                  <div className="border-t border-gray-100 mt-1 pt-1">
+                    <button
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        logout();
+                      }}
+                      className="flex items-center gap-3 px-4 py-2.5 text-red-600 hover:bg-red-50 transition-colors w-full cursor-pointer"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      Cerrar Sesión
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -132,7 +176,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="flex items-center justify-between p-4 border-b">
               <Link href="/admin" className="flex items-center gap-2">
                 <span className="text-xl">☕</span>
-                <span className="text-lg font-bold text-indigo-600">CustomCups</span>
+                <span className="text-lg font-bold text-teal-600">CustomCups</span>
               </Link>
               <button onClick={() => setSidebarOpen(false)} className="p-2 text-gray-500 hover:text-gray-700">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -148,11 +192,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     key={item.href}
                     href={item.href}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive
-                        ? 'bg-indigo-50 text-indigo-600 font-medium'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      ? 'bg-teal-50 text-teal-600 font-medium'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                       }`}
                   >
-                    <svg className={`w-5 h-5 ${isActive ? 'text-indigo-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className={`w-5 h-5 ${isActive ? 'text-teal-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
                     </svg>
                     {item.label}
@@ -161,7 +205,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               })}
             </nav>
             <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-gray-50">
-              <Link href="/" className="block w-full py-2 text-center text-indigo-600 font-medium hover:bg-indigo-50 rounded-lg">
+              <Link href="/" className="block w-full py-2 text-center text-teal-600 font-medium hover:bg-teal-50 rounded-lg">
                 Ver Tienda
               </Link>
             </div>
@@ -180,11 +224,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   key={item.href}
                   href={item.href}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive
-                      ? 'bg-indigo-50 text-indigo-600 font-medium'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-teal-50 text-teal-600 font-medium'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                 >
-                  <svg className={`w-5 h-5 ${isActive ? 'text-indigo-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className={`w-5 h-5 ${isActive ? 'text-teal-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
                   </svg>
                   {item.label}

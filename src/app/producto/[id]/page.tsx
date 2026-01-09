@@ -103,7 +103,7 @@ export default function ProductDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-rose-600 border-t-transparent" />
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-teal-600 border-t-transparent" />
       </div>
     );
   }
@@ -112,7 +112,7 @@ export default function ProductDetailPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center py-16">
         <h1 className="text-2xl font-bold text-gray-800 mb-4">Producto no encontrado</h1>
-        <Link href="/productos" className="text-rose-600 hover:underline">
+        <Link href="/productos" className="text-teal-600 hover:underline">
           Volver a productos
         </Link>
       </div>
@@ -133,9 +133,9 @@ export default function ProductDetailPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-gray-500 mb-8">
-          <Link href="/" className="hover:text-rose-600">Inicio</Link>
+          <Link href="/" className="hover:text-teal-600">Inicio</Link>
           <span>/</span>
-          <Link href="/productos" className="hover:text-rose-600">Productos</Link>
+          <Link href="/productos" className="hover:text-teal-600">Productos</Link>
           <span>/</span>
           <span className="text-gray-900">{product.name}</span>
         </nav>
@@ -178,7 +178,7 @@ export default function ProductDetailPage() {
             {isCustomizable && (
               <button
                 onClick={() => setShowCustomizer(!showCustomizer)}
-                className="w-full py-3 border-2 border-rose-600 text-rose-600 font-semibold rounded-xl hover:bg-rose-50 transition-colors flex items-center justify-center gap-2"
+                className="w-full py-3 border-2 border-teal-600 text-teal-600 font-semibold rounded-xl hover:bg-teal-50 transition-colors flex items-center justify-center gap-2"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -200,7 +200,7 @@ export default function ProductDetailPage() {
           {/* Product Info */}
           <div className="space-y-6">
             <div>
-              <p className="text-sm font-medium text-rose-600 uppercase tracking-wide mb-2">
+              <p className="text-sm font-medium text-teal-600 uppercase tracking-wide mb-2">
                 {product.category_name || product.category}
               </p>
               <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
@@ -221,9 +221,9 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Price */}
-            <div className="bg-gradient-to-r from-rose-50 to-orange-50 rounded-2xl p-6">
+            <div className="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-2xl p-6">
               <div className="flex items-baseline gap-3 mb-2">
-                <span className="text-4xl font-bold text-rose-600">
+                <span className="text-4xl font-bold text-teal-600">
                   S/ {finalPrice.toFixed(2)}
                 </span>
                 {product.original_price && product.original_price > finalPrice && (
@@ -289,12 +289,12 @@ export default function ProductDetailPage() {
               onClick={handleAddToCart}
               disabled={!isInStock}
               className={`w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all ${isInStock
-                ? 'bg-gradient-to-r from-rose-600 to-orange-500 text-white hover:shadow-xl hover:scale-[1.02]'
+                ? 'bg-gradient-to-r from-teal-600 to-cyan-500 text-white hover:shadow-xl hover:scale-[1.02]'
                 : 'bg-gray-200 text-gray-500 cursor-not-allowed'
                 }`}
             >
               {inCartQuantity > 0 && (
-                <span className="w-6 h-6 bg-orange-500 rounded-full text-sm flex items-center justify-center">
+                <span className="w-6 h-6 bg-cyan-500 rounded-full text-sm flex items-center justify-center">
                   {inCartQuantity}
                 </span>
               )}

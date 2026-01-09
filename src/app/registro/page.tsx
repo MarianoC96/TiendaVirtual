@@ -41,14 +41,14 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 to-orange-50 flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 flex items-center justify-center py-12 px-4">
       <div className="max-w-md w-full">
         <div className="bg-white rounded-3xl shadow-xl p-8">
           {/* Header */}
           <div className="text-center mb-8">
             <Link href="/" className="inline-flex items-center gap-2 mb-4">
               <span className="text-3xl">☕</span>
-              <span className="text-2xl font-bold text-rose-600">CustomCups</span>
+              <span className="text-2xl font-bold text-teal-600">CustomCups</span>
             </Link>
             <h1 className="text-2xl font-bold text-gray-900">Crear Cuenta</h1>
             <p className="text-gray-500 mt-2">Únete a nuestra comunidad</p>
@@ -70,7 +70,7 @@ export default function RegisterPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 placeholder="Tu nombre"
               />
             </div>
@@ -82,7 +82,7 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 placeholder="tu@email.com"
               />
             </div>
@@ -94,7 +94,7 @@ export default function RegisterPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 placeholder="Mínimo 6 caracteres"
               />
             </div>
@@ -106,7 +106,7 @@ export default function RegisterPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 placeholder="Repite tu contraseña"
               />
             </div>
@@ -114,7 +114,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-rose-600 to-orange-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all disabled:opacity-50"
+              className="w-full py-3 bg-gradient-to-r from-teal-600 to-cyan-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all disabled:opacity-50"
             >
               {loading ? 'Creando cuenta...' : 'Crear Cuenta'}
             </button>
@@ -124,7 +124,7 @@ export default function RegisterPage() {
           <div className="mt-6 text-center">
             <p className="text-gray-500">
               ¿Ya tienes cuenta?{' '}
-              <Link href="/login" className="text-rose-600 font-medium hover:underline">
+              <Link href="/login" className="text-teal-600 font-medium hover:underline">
                 Inicia sesión
               </Link>
             </p>

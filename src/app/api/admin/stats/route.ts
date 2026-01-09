@@ -37,9 +37,9 @@ export async function GET() {
       return sum;
     }, 0) || 0;
 
-    // Get monthly sales data (last 6 months)
+    // Get monthly sales data (last 12 months)
     const monthlySales: { month: string; revenue: number; orders: number }[] = [];
-    for (let i = 5; i >= 0; i--) {
+    for (let i = 11; i >= 0; i--) {
       const date = new Date(currentYear, currentMonth - i, 1);
       const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
       const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59);
@@ -71,14 +71,45 @@ export async function GET() {
       .order('created_at', { ascending: false })
       .limit(5);
 
-    // Get active discounts
-    const { data: activeDiscounts } = await db
+    // Get active discounts with target details
+    const { data: activeDiscountsRaw, error: discountsError } = await db
       .from('discounts')
-      .select('id, name, discount_type, discount_value, applies_to')
+      .select('*')
       .eq('active', true)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .limit(5);
+
+    if (discountsError) {
+      console.error('Error fetching discounts:', discountsError);
+    }
+
+    // Enrich discounts with target names (same logic as discounts page)
+    const activeDiscounts = await Promise.all(
+      (activeDiscountsRaw || []).map(async (discount: any) => {
+        let target_name = '';
+
+        if (discount.applies_to === 'product' && discount.target_id) {
+          const { data: product } = await db
+            .from('products')
+            .select('name')
+            .eq('id', discount.target_id)
+            .single();
+          target_name = product?.name || '';
+        } else if (discount.applies_to === 'category' && discount.target_id) {
+          const { data: category } = await db
+            .from('categories')
+            .select('name')
+            .eq('id', discount.target_id)
+            .single();
+          target_name = category?.name || '';
+        } else if (discount.applies_to === 'cart_value') {
+          target_name = `${discount.target_id || 0}`;
+        }
+
+        return { ...discount, target_name };
+      })
+    );
 
     // Get low stock products (stock <= 5)
     const { data: lowStockProducts } = await db

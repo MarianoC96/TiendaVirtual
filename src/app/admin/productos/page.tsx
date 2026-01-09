@@ -187,7 +187,7 @@ export default function AdminProductsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-rose-600 border-t-transparent" />
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-teal-600 border-t-transparent" />
       </div>
     );
   }
@@ -198,7 +198,7 @@ export default function AdminProductsPage() {
         <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Productos</h1>
         <button
           onClick={handleCreate}
-          className="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 cursor-pointer text-sm lg:text-base"
+          className="w-full sm:w-auto px-4 py-2 bg-teal-600 text-white rounded-xl font-medium hover:bg-teal-700 transition-colors shadow-lg shadow-teal-200 cursor-pointer text-sm lg:text-base"
         >
           + Nuevo Producto
         </button>
@@ -231,7 +231,7 @@ export default function AdminProductsPage() {
             type="month"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 outline-none"
+            className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-200 outline-none"
           />
         )}
       </div>
@@ -248,14 +248,14 @@ export default function AdminProductsPage() {
             <input
               type="text"
               placeholder="Buscar producto por nombre..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent bg-white"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
 
           <select
-            className="w-full md:w-64 px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 bg-white"
+            className="w-full md:w-64 px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 bg-white"
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
           >
@@ -331,7 +331,7 @@ export default function AdminProductsPage() {
                           <div className="flex justify-end gap-2">
                             <button
                               onClick={() => handleEdit(product)}
-                              className="px-3 py-1 text-blue-600 hover:bg-blue-50 rounded-lg text-sm cursor-pointer"
+                              className="px-3 py-1 text-teal-600 hover:bg-teal-50 rounded-lg text-sm cursor-pointer"
                             >
                               Editar
                             </button>
@@ -404,7 +404,7 @@ export default function AdminProductsPage() {
                       type="text"
                       value={editingProduct.name}
                       onChange={(e) => setEditingProduct(prev => prev ? { ...prev, name: e.target.value } : null)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     />
                   </div>
 
@@ -416,7 +416,7 @@ export default function AdminProductsPage() {
                     <select
                       value={editingProduct.category_id || ''}
                       onChange={(e) => setEditingProduct(prev => prev ? { ...prev, category_id: parseInt(e.target.value) } : null)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     >
                       <option value="">Seleccionar categoría</option>
                       {categories.map((cat) => (
@@ -436,7 +436,7 @@ export default function AdminProductsPage() {
                         step="0.01"
                         value={editingProduct.price}
                         onChange={(e) => setEditingProduct(prev => prev ? { ...prev, price: parseFloat(e.target.value) || 0 } : null)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       />
                     </div>
                     <div>
@@ -447,7 +447,7 @@ export default function AdminProductsPage() {
                         type="number"
                         value={editingProduct.stock}
                         onChange={(e) => setEditingProduct(prev => prev ? { ...prev, stock: parseInt(e.target.value) || 0 } : null)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       />
                     </div>
                   </div>
@@ -461,7 +461,7 @@ export default function AdminProductsPage() {
                       type="url"
                       value={editingProduct.image_url || ''}
                       onChange={(e) => setEditingProduct(prev => prev ? { ...prev, image_url: e.target.value } : null)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       placeholder="https://ejemplo.com/imagen.jpg"
                     />
                   </div>
@@ -475,7 +475,7 @@ export default function AdminProductsPage() {
                       type="text"
                       value={editingProduct.short_description || ''}
                       onChange={(e) => setEditingProduct(prev => prev ? { ...prev, short_description: e.target.value } : null)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     />
                   </div>
 
@@ -488,7 +488,7 @@ export default function AdminProductsPage() {
                       value={editingProduct.description || ''}
                       onChange={(e) => setEditingProduct(prev => prev ? { ...prev, description: e.target.value } : null)}
                       rows={3}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent resize-none"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
                     />
                   </div>
 
@@ -499,7 +499,7 @@ export default function AdminProductsPage() {
                       id="is_featured"
                       checked={editingProduct.is_featured === 1}
                       onChange={(e) => setEditingProduct(prev => prev ? { ...prev, is_featured: e.target.checked ? 1 : 0 } : null)}
-                      className="w-5 h-5 text-rose-600 border-gray-300 rounded focus:ring-rose-500"
+                      className="w-5 h-5 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
                     />
                     <label htmlFor="is_featured" className="text-sm font-medium text-gray-700">
                       Producto destacado ⭐
@@ -518,7 +518,7 @@ export default function AdminProductsPage() {
                   <button
                     onClick={handleSave}
                     disabled={saving || !editingProduct.name || !editingProduct.price || !editingProduct.category_id}
-                    className="px-4 py-2 bg-rose-600 text-white rounded-xl hover:bg-rose-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="px-4 py-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
                     {saving ? (
                       <>

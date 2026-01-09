@@ -26,6 +26,7 @@ interface Discount {
   discount_type: string;
   discount_value: number;
   applies_to: string;
+  target_name?: string;
 }
 
 interface MonthlySale {
@@ -68,7 +69,7 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent" />
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-teal-600 border-t-transparent" />
       </div>
     );
   }
@@ -148,21 +149,21 @@ export default function AdminDashboard() {
         {/* Gráfica de Ventas */}
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Ventas Mensuales</h2>
-          <div className="flex items-end gap-3 h-48">
+          <div className="flex items-end justify-between gap-2 h-32 px-2">
             {stats?.monthlySales.map((sale, index) => (
-              <div key={index} className="flex-1 flex flex-col items-center gap-2">
+              <div key={index} className="flex flex-col items-center gap-1 flex-1">
                 <div className="w-full flex flex-col items-center">
-                  <span className="text-xs font-medium text-gray-600 mb-1">
-                    S/ {sale.revenue.toLocaleString('es-PE', { maximumFractionDigits: 0 })}
+                  <span className="text-[10px] font-medium text-gray-500 mb-1 whitespace-nowrap">
+                    {sale.revenue > 0 ? `S/${sale.revenue >= 1000 ? (sale.revenue / 1000).toFixed(1) + 'k' : sale.revenue.toFixed(0)}` : 'S/0'}
                   </span>
                   <div
-                    className="w-full bg-indigo-500 rounded-t-lg transition-all duration-500 hover:bg-indigo-600"
+                    className="w-full max-w-[32px] mx-auto bg-gradient-to-t from-teal-600 to-teal-400 rounded-t transition-all duration-300 hover:from-teal-700 hover:to-teal-500"
                     style={{
-                      height: `${Math.max((sale.revenue / maxRevenue) * 140, 8)}px`
+                      height: `${Math.max((sale.revenue / maxRevenue) * 70, 4)}px`
                     }}
                   />
                 </div>
-                <span className="text-xs text-gray-500 capitalize">{sale.month}</span>
+                <span className="text-[10px] text-gray-400 capitalize">{sale.month.slice(0, 3)}</span>
               </div>
             ))}
           </div>
@@ -200,7 +201,7 @@ export default function AdminDashboard() {
               ))
             )}
           </div>
-          <Link href="/admin/productos" className="mt-3 block text-center text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+          <Link href="/admin/productos" className="mt-3 block text-center text-sm text-teal-600 hover:text-teal-700 font-medium">
             Ver todos →
           </Link>
         </div>
@@ -214,7 +215,7 @@ export default function AdminDashboard() {
             <h2 className="text-lg font-semibold text-gray-900">Cupones Activos</h2>
             <span className="text-2xl">🎟️</span>
           </div>
-          <div className="space-y-3 max-h-40 overflow-y-auto">
+          <div className="space-y-3 max-h-44 overflow-y-auto pr-1">
             {stats?.activeCoupons.length === 0 ? (
               <p className="text-sm text-gray-500 text-center py-4">Sin cupones activos</p>
             ) : (
@@ -236,7 +237,7 @@ export default function AdminDashboard() {
               ))
             )}
           </div>
-          <Link href="/admin/cupones" className="mt-3 block text-center text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+          <Link href="/admin/cupones" className="mt-3 block text-center text-sm text-teal-600 hover:text-teal-700 font-medium">
             Gestionar cupones →
           </Link>
         </div>
@@ -247,24 +248,28 @@ export default function AdminDashboard() {
             <h2 className="text-lg font-semibold text-gray-900">Descuentos Activos</h2>
             <span className="text-2xl">💰</span>
           </div>
-          <div className="space-y-3 max-h-40 overflow-y-auto">
+          <div className="space-y-3 max-h-44 overflow-y-auto pr-1">
             {stats?.activeDiscounts.length === 0 ? (
               <p className="text-sm text-gray-500 text-center py-4">Sin descuentos activos</p>
             ) : (
               stats?.activeDiscounts.map(discount => (
                 <div key={discount.id} className="flex items-center justify-between p-3 bg-green-50 rounded-xl border border-green-100">
-                  <div>
-                    <p className="font-medium text-green-700">{discount.name}</p>
-                    <p className="text-xs text-gray-500 capitalize">Aplica a: {discount.applies_to}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-green-700 truncate">{discount.name}</p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {discount.applies_to === 'category' && `Categoría: ${discount.target_name || 'General'}`}
+                      {discount.applies_to === 'product' && `Producto: ${discount.target_name || 'General'}`}
+                      {discount.applies_to === 'cart_value' && `Carrito: A partir de S/ ${discount.target_name || '0'}`}
+                    </p>
                   </div>
-                  <span className="font-bold text-green-600">
+                  <span className="font-bold text-green-600 ml-2">
                     {discount.discount_type === 'percentage' ? `${discount.discount_value}%` : `S/ ${discount.discount_value}`}
                   </span>
                 </div>
               ))
             )}
           </div>
-          <Link href="/admin/descuentos" className="mt-3 block text-center text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+          <Link href="/admin/descuentos" className="mt-3 block text-center text-sm text-teal-600 hover:text-teal-700 font-medium">
             Gestionar descuentos →
           </Link>
         </div>

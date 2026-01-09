@@ -230,7 +230,7 @@ export default function AdminCouponsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-rose-600 border-t-transparent" />
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-teal-600 border-t-transparent" />
       </div>
     );
   }
@@ -244,7 +244,7 @@ export default function AdminCouponsPage() {
         </div>
         <button
           onClick={() => { resetForm(); setShowForm(true); }}
-          className="flex items-center gap-2 px-6 py-2.5 bg-rose-600 text-white rounded-xl font-medium hover:bg-rose-700 transition-colors shadow-sm hover:shadow-md cursor-pointer"
+          className="flex items-center gap-2 px-6 py-2.5 bg-teal-600 text-white rounded-xl font-medium hover:bg-teal-700 transition-colors shadow-sm hover:shadow-md cursor-pointer"
         >
           <span className="text-xl leading-none">+</span> Nuevo Cupón
         </button>
@@ -277,13 +277,13 @@ export default function AdminCouponsPage() {
             type="month"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 outline-none"
+            className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-200 outline-none"
           />
         )}
       </div>
 
       {/* Info Banner */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 text-sm text-blue-800 flex gap-2">
+      <div className="bg-teal-50 border border-teal-200 rounded-xl p-4 mb-6 text-sm text-teal-800 flex gap-2">
         <span>💡</span>
         <p>Los cupones pueden aplicarse a todo el carrito, o restringirse a productos/categorías específicas.</p>
       </div>
@@ -295,7 +295,7 @@ export default function AdminCouponsPage() {
           placeholder="Buscar cupón por código o nombre..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 transition-all outline-none bg-white shadow-sm"
+          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-500 transition-all outline-none bg-white shadow-sm"
         />
         <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -312,7 +312,7 @@ export default function AdminCouponsPage() {
 
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden transform transition-all max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-rose-500 to-rose-600 px-6 py-4 flex justify-between items-center sticky top-0 z-10">
+            <div className="bg-gradient-to-r from-teal-500 to-teal-600 px-6 py-4 flex justify-between items-center sticky top-0 z-10">
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
                 <span>{editingCoupon ? '✏️' : '🎟️'}</span>
                 {editingCoupon ? 'Editar Cupón' : 'Nuevo Cupón'}
@@ -346,7 +346,7 @@ export default function AdminCouponsPage() {
                           value={formData.code}
                           onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase().replace(/\s/g, '') })}
                           required
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 font-mono text-lg uppercase transition-all outline-none"
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-500 font-mono text-lg uppercase transition-all outline-none"
                           placeholder="VERANO2026"
                         />
                       </div>
@@ -357,7 +357,7 @@ export default function AdminCouponsPage() {
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                           required
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 transition-all outline-none"
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-500 transition-all outline-none"
                           placeholder="Descuento Especial de Verano"
                         />
                       </div>
@@ -373,7 +373,7 @@ export default function AdminCouponsPage() {
                         <select
                           value={formData.discount_type}
                           onChange={(e) => setFormData({ ...formData, discount_type: e.target.value })}
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 outline-none bg-white"
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-500 outline-none bg-white"
                         >
                           <option value="percentage">Porcentaje (%)</option>
                           <option value="fixed">Monto Fijo (S/)</option>
@@ -387,7 +387,7 @@ export default function AdminCouponsPage() {
                           onChange={(e) => setFormData({ ...formData, discount_value: parseFloat(e.target.value) || 0 })}
                           required
                           min="0"
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 outline-none"
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-500 outline-none"
                         />
                       </div>
                       <div>
@@ -395,7 +395,7 @@ export default function AdminCouponsPage() {
                         <select
                           value={formData.applies_to}
                           onChange={(e) => setFormData({ ...formData, applies_to: e.target.value, target_id: 0 })}
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 outline-none bg-white"
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-500 outline-none bg-white"
                         >
                           <option value="cart_value">Todo el Carrito</option>
                           <option value="product">Producto Específico</option>
@@ -413,7 +413,7 @@ export default function AdminCouponsPage() {
                           value={formData.target_id}
                           onChange={(e) => setFormData({ ...formData, target_id: parseInt(e.target.value) })}
                           required
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 outline-none bg-white"
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-500 outline-none bg-white"
                         >
                           <option value={0}>Seleccionar...</option>
                           {getTargetOptions().map((opt: any) => (
@@ -435,7 +435,7 @@ export default function AdminCouponsPage() {
                           value={formData.min_purchase}
                           onChange={(e) => setFormData({ ...formData, min_purchase: parseFloat(e.target.value) || 0 })}
                           min="0"
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 outline-none"
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-500 outline-none"
                         />
                       </div>
                       <div>
@@ -446,7 +446,7 @@ export default function AdminCouponsPage() {
                           onChange={(e) => setFormData({ ...formData, max_uses: e.target.value })}
                           min="1"
                           placeholder="Ilimitado"
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 outline-none"
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-500 outline-none"
                         />
                       </div>
                       <div>
@@ -457,7 +457,7 @@ export default function AdminCouponsPage() {
                           onChange={(e) => setFormData({ ...formData, usage_limit_per_user: e.target.value })}
                           min="1"
                           placeholder="Ilimitado"
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 outline-none"
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-500 outline-none"
                         />
                       </div>
                       <div>
@@ -466,7 +466,7 @@ export default function AdminCouponsPage() {
                           type="date"
                           value={formData.expires_at}
                           onChange={(e) => setFormData({ ...formData, expires_at: e.target.value })}
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 outline-none"
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-500 outline-none"
                         />
                       </div>
                     </div>
@@ -484,7 +484,7 @@ export default function AdminCouponsPage() {
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-3 bg-rose-600 text-white rounded-xl hover:bg-rose-700 font-medium shadow-sm hover:shadow hover:-translate-y-0.5 transition-all cursor-pointer"
+                    className="flex-1 px-4 py-3 bg-teal-600 text-white rounded-xl hover:bg-teal-700 font-medium shadow-sm hover:shadow hover:-translate-y-0.5 transition-all cursor-pointer"
                   >
                     {editingCoupon ? 'Guardar Cambios' : 'Crear Cupón'}
                   </button>
@@ -536,7 +536,7 @@ export default function AdminCouponsPage() {
                     <div className="text-xs text-gray-500 mt-1">{coupon.name}</div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="font-semibold text-rose-600">
+                    <span className="font-semibold text-teal-600">
                       {coupon.discount_type === 'percentage' ? `${coupon.discount_value}% OFF` : `- S/ ${coupon.discount_value}`}
                     </span>
                     {coupon.min_purchase > 0 && (
@@ -545,7 +545,7 @@ export default function AdminCouponsPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex flex-col">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium w-fit ${coupon.applies_to === 'product' ? 'bg-blue-100 text-blue-700' :
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium w-fit ${coupon.applies_to === 'product' ? 'bg-teal-100 text-teal-700' :
                         coupon.applies_to === 'category' ? 'bg-purple-100 text-purple-700' :
                           'bg-gray-100 text-gray-700'
                         }`}>
@@ -599,7 +599,7 @@ export default function AdminCouponsPage() {
                           </button>
                           <button
                             onClick={() => handleEdit(coupon)}
-                            className="px-3 py-1 text-blue-600 hover:bg-blue-50 rounded-lg text-sm font-medium transition-colors"
+                            className="px-3 py-1 text-teal-600 hover:bg-teal-50 rounded-lg text-sm font-medium transition-colors"
                           >
                             Editar
                           </button>

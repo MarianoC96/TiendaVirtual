@@ -1,31 +1,36 @@
 @import "tailwindcss";
 
 :root {
-  /* Primary Colors - Indigo */
-  --primary: #4F46E5;
-  --primary-dark: #4338CA;
-  --primary-light: #EEF2FF;
-  --primary-50: #EEF2FF;
-  --primary-100: #E0E7FF;
-  --primary-500: #4F46E5;
-  --primary-600: #4338CA;
-  --primary-700: #3730A3;
+  /* Primary Colors - Teal */
+  --primary: #34A6BA;
+  --primary-dark: #2A8A9C;
+  --primary-light: #E8F6F8;
+  --primary-50: #E8F6F8;
+  --primary-100: #C5E9EE;
+  --primary-200: #9AD9E2;
+  --primary-300: #6DC8D5;
+  --primary-400: #4BB4C5;
+  --primary-500: #34A6BA;
+  --primary-600: #2A8A9C;
+  --primary-700: #216E7D;
+  --primary-800: #18525E;
+  --primary-900: #0F363F;
 
-  /* Accent Colors - Amber */
-  --accent: #F59E0B;
-  --accent-light: #FEF3C7;
-  --accent-dark: #D97706;
+  /* Accent Colors - Coral (complementary to teal) */
+  --accent: #E07A5F;
+  --accent-light: #FAEBE7;
+  --accent-dark: #C4583F;
 
   /* Neutral Colors */
-  --background: #FAFAFA;
+  --background: #FFFFF7;
   --surface: #FFFFFF;
-  --border: #E5E7EB;
-  --border-light: #F3F4F6;
+  --border: #E8E8E0;
+  --border-light: #F5F5ED;
 
   /* Text Colors */
-  --text-primary: #111827;
-  --text-secondary: #6B7280;
-  --text-muted: #9CA3AF;
+  --text-primary: #1A2F33;
+  --text-secondary: #5A6B6E;
+  --text-muted: #8A9A9D;
 
   /* State Colors */
   --success: #10B981;
@@ -34,8 +39,8 @@
   --warning-light: #FEF3C7;
   --error: #EF4444;
   --error-light: #FEE2E2;
-  --info: #3B82F6;
-  --info-light: #DBEAFE;
+  --info: #34A6BA;
+  --info-light: #E8F6F8;
 
   /* Legacy support */
   --foreground: var(--text-primary);
@@ -114,5 +119,5 @@ html {
 
 .badge-info {
   background-color: var(--info-light);
-  color: #1E40AF;
+  color: #18525E;
 }

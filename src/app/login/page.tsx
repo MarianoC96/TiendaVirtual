@@ -34,14 +34,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 to-orange-50 flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 flex items-center justify-center py-12 px-4">
       <div className="max-w-md w-full">
         <div className="bg-white rounded-3xl shadow-xl p-8">
           {/* Header */}
           <div className="text-center mb-8">
             <Link href="/" className="inline-flex items-center gap-2 mb-4">
               <span className="text-3xl">☕</span>
-              <span className="text-2xl font-bold text-rose-600">CustomCups</span>
+              <span className="text-2xl font-bold text-teal-600">CustomCups</span>
             </Link>
             <h1 className="text-2xl font-bold text-gray-900">Iniciar Sesión</h1>
             <p className="text-gray-500 mt-2">Bienvenido de vuelta</p>
@@ -63,7 +63,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 placeholder="tu@email.com"
               />
             </div>
@@ -75,7 +75,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 placeholder="••••••••"
               />
             </div>
@@ -83,7 +83,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-rose-600 to-orange-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all disabled:opacity-50"
+              className="w-full py-3 bg-gradient-to-r from-teal-600 to-cyan-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all disabled:opacity-50"
             >
               {loading ? 'Iniciando...' : 'Iniciar Sesión'}
             </button>
@@ -93,7 +93,7 @@ export default function LoginPage() {
           <div className="mt-6 text-center">
             <p className="text-gray-500">
               ¿No tienes cuenta?{' '}
-              <Link href="/registro" className="text-rose-600 font-medium hover:underline">
+              <Link href="/registro" className="text-teal-600 font-medium hover:underline">
                 Regístrate
               </Link>
             </p>

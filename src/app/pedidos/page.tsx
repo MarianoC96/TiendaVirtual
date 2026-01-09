@@ -23,7 +23,7 @@ interface Order {
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
     pending: { label: 'Pendiente', color: 'bg-gray-100 text-gray-700' },
     processing: { label: 'Procesando', color: 'bg-cyan-100 text-cyan-700' },
-    transit: { label: 'En Tránsito', color: 'bg-orange-100 text-orange-700' },
+    transit: { label: 'En Tránsito', color: 'bg-cyan-100 text-cyan-700' },
     delivered: { label: 'Entregado', color: 'bg-green-100 text-green-700' },
     cancelled: { label: 'Cancelado', color: 'bg-red-100 text-red-700' }
 };
@@ -56,7 +56,7 @@ export default function MisPedidosPage() {
     if (authLoading || loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-4 border-rose-600 border-t-transparent" />
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-teal-600 border-t-transparent" />
             </div>
         );
     }
@@ -65,7 +65,7 @@ export default function MisPedidosPage() {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center gap-4">
                 <h1 className="text-2xl font-bold text-gray-900">Inicia sesión para ver tus pedidos</h1>
-                <Link href="/login" className="px-6 py-3 bg-rose-600 text-white rounded-xl hover:bg-rose-700">
+                <Link href="/login" className="px-6 py-3 bg-teal-600 text-white rounded-xl hover:bg-teal-700">
                     Iniciar Sesión
                 </Link>
             </div>
@@ -84,7 +84,7 @@ export default function MisPedidosPage() {
                         </svg>
                         <h2 className="text-xl font-medium text-gray-900 mb-2">No tienes pedidos aún</h2>
                         <p className="text-gray-500 mb-6">¡Explora nuestra tienda y haz tu primer pedido!</p>
-                        <Link href="/productos" className="inline-block px-6 py-3 bg-rose-600 text-white rounded-xl hover:bg-rose-700">
+                        <Link href="/productos" className="inline-block px-6 py-3 bg-teal-600 text-white rounded-xl hover:bg-teal-700">
                             Ver Productos
                         </Link>
                     </div>
@@ -171,7 +171,7 @@ export default function MisPedidosPage() {
 
                                         <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
                                             <span className="text-gray-500">Total</span>
-                                            <span className="text-xl font-bold text-rose-600">S/ {order.total.toFixed(2)}</span>
+                                            <span className="text-xl font-bold text-teal-600">S/ {order.total.toFixed(2)}</span>
                                         </div>
                                     </div>
                                 </div>

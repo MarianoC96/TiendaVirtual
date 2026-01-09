@@ -104,7 +104,7 @@ function ProductsContent() {
         <div className="mb-8 space-y-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
                 Explorar Productos
               </h1>
               <p className="text-gray-600 mt-1">
@@ -117,7 +117,7 @@ function ProductsContent() {
               <input
                 type="text"
                 placeholder="Buscar por nombre, descripción..."
-                className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition-all"
+                className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 shadow-sm transition-all"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -141,7 +141,7 @@ function ProductsContent() {
           <div className="flex items-center gap-2 text-sm text-gray-600 bg-white p-1 rounded-lg border border-gray-200 w-fit">
             <button
               onClick={() => setViewMode('grid')}
-              className={`px-3 py-1.5 rounded-md flex items-center gap-2 transition-colors ${viewMode === 'grid' ? 'bg-indigo-50 text-indigo-700 font-medium' : 'hover:bg-gray-50'}`}
+              className={`px-3 py-1.5 rounded-md flex items-center gap-2 transition-colors ${viewMode === 'grid' ? 'bg-teal-50 text-teal-700 font-medium' : 'hover:bg-gray-50'}`}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -150,7 +150,7 @@ function ProductsContent() {
             </button>
             <button
               onClick={() => setViewMode('grouped')}
-              className={`px-3 py-1.5 rounded-md flex items-center gap-2 transition-colors ${viewMode === 'grouped' ? 'bg-indigo-50 text-indigo-700 font-medium' : 'hover:bg-gray-50'}`}
+              className={`px-3 py-1.5 rounded-md flex items-center gap-2 transition-colors ${viewMode === 'grouped' ? 'bg-teal-50 text-teal-700 font-medium' : 'hover:bg-gray-50'}`}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -169,7 +169,7 @@ function ProductsContent() {
                 <button
                   onClick={() => setSelectedCategory(null)}
                   className={`w-full text-left px-4 py-2 rounded-xl transition-colors ${!selectedCategory
-                    ? 'bg-indigo-100 text-indigo-700 font-medium'
+                    ? 'bg-teal-100 text-teal-700 font-medium'
                     : 'text-gray-600 hover:bg-gray-50'
                     }`}
                 >
@@ -180,7 +180,7 @@ function ProductsContent() {
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.slug)}
                     className={`w-full text-left px-4 py-2 rounded-xl transition-colors flex items-center gap-2 ${selectedCategory === cat.slug
-                      ? 'bg-indigo-100 text-indigo-700 font-medium'
+                      ? 'bg-teal-100 text-teal-700 font-medium'
                       : 'text-gray-600 hover:bg-gray-50'
                       }`}
                   >
@@ -196,7 +196,7 @@ function ProductsContent() {
           <div className="flex-grow">
             {loading ? (
               <div className="flex justify-center py-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent" />
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-teal-600 border-t-transparent" />
               </div>
             ) : filteredProducts.length === 0 ? (
               <div className="text-center py-20">
@@ -209,7 +209,7 @@ function ProductsContent() {
                 <p className="text-gray-500">Intenta con otra búsqueda o filtro</p>
                 <button
                   onClick={() => { setSearchQuery(''); setSelectedCategory(null); }}
-                  className="mt-4 text-indigo-600 hover:underline font-medium"
+                  className="mt-4 text-teal-600 hover:underline font-medium"
                 >
                   Limpiar filtros
                 </button>
@@ -227,7 +227,7 @@ function ProductsContent() {
                 {Object.entries(groupedProducts).map(([categoryName, items]) => (
                   <div key={categoryName}>
                     <h3 className="flex items-center gap-3 text-lg font-bold text-gray-800 mb-6 border-b border-gray-200 pb-2">
-                      <span className="w-1.5 h-6 bg-indigo-500 rounded-full"></span>
+                      <span className="w-1.5 h-6 bg-teal-500 rounded-full"></span>
                       {categoryName}
                       <span className="text-sm font-normal text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
                         {items.length}
@@ -253,7 +253,7 @@ export default function ProductsPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent" />
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-teal-600 border-t-transparent" />
       </div>
     }>
       <ProductsContent />

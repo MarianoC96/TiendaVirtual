@@ -194,7 +194,7 @@ export default function AdminCategoriesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-rose-600 border-t-transparent" />
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-teal-600 border-t-transparent" />
       </div>
     );
   }
@@ -208,7 +208,7 @@ export default function AdminCategoriesPage() {
         </div>
         <button
           onClick={() => { resetForm(); setShowForm(true); }}
-          className="flex items-center gap-2 px-6 py-2.5 bg-rose-600 text-white rounded-xl font-medium hover:bg-rose-700 transition-colors shadow-sm hover:shadow-md cursor-pointer"
+          className="flex items-center gap-2 px-6 py-2.5 bg-teal-600 text-white rounded-xl font-medium hover:bg-teal-700 transition-colors shadow-sm hover:shadow-md cursor-pointer"
         >
           <span className="text-xl leading-none">+</span> Nueva Categoría
         </button>
@@ -241,7 +241,7 @@ export default function AdminCategoriesPage() {
             type="month"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 outline-none"
+            className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-200 outline-none"
           />
         )}
       </div>
@@ -253,7 +253,7 @@ export default function AdminCategoriesPage() {
           placeholder="Buscar categoría por nombre..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 transition-all outline-none bg-white shadow-sm"
+          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-500 transition-all outline-none bg-white shadow-sm"
         />
         <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -270,7 +270,7 @@ export default function AdminCategoriesPage() {
 
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all">
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-rose-500 to-rose-600 px-6 py-4 flex justify-between items-center">
+            <div className="bg-gradient-to-r from-teal-500 to-teal-600 px-6 py-4 flex justify-between items-center">
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
                 <span>{editingId ? '✏️' : '✨'}</span>
                 {editingId ? 'Editar Categoría' : 'Nueva Categoría'}
@@ -300,7 +300,7 @@ export default function AdminCategoriesPage() {
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       required
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 transition-all outline-none"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-500 transition-all outline-none"
                       placeholder="Ej: Bebidas Calientes"
                     />
                   </div>
@@ -314,7 +314,7 @@ export default function AdminCategoriesPage() {
                           value={formData.icon}
                           onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
                           required
-                          className="w-16 h-12 px-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 text-2xl text-center outline-none"
+                          className="w-16 h-12 px-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-500 text-2xl text-center outline-none"
                         />
                       </div>
                       <div className="flex-1 bg-gray-50 rounded-xl p-2 border border-gray-100 flex flex-wrap gap-1.5 h-12 overflow-y-auto">
@@ -323,7 +323,7 @@ export default function AdminCategoriesPage() {
                             key={icon}
                             type="button"
                             onClick={() => setFormData({ ...formData, icon })}
-                            className={`w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition-all cursor-pointer text-lg ${formData.icon === icon ? 'bg-white shadow-sm ring-1 ring-rose-200' : 'text-gray-500'}`}
+                            className={`w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition-all cursor-pointer text-lg ${formData.icon === icon ? 'bg-white shadow-sm ring-1 ring-teal-200' : 'text-gray-500'}`}
                           >
                             {icon}
                           </button>
@@ -341,7 +341,7 @@ export default function AdminCategoriesPage() {
                           type="text"
                           value={formData.slug}
                           onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                          className="flex-1 px-4 py-2.5 border border-gray-300 rounded-r-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 transition-all outline-none"
+                          className="flex-1 px-4 py-2.5 border border-gray-300 rounded-r-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-500 transition-all outline-none"
                           placeholder="slug-de-categoria"
                         />
                       </div>
@@ -354,7 +354,7 @@ export default function AdminCategoriesPage() {
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       rows={3}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-500 transition-all outline-none resize-none"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-500 transition-all outline-none resize-none"
                       placeholder="Breve descripción de los productos en esta categoría..."
                     />
                   </div>
@@ -370,7 +370,7 @@ export default function AdminCategoriesPage() {
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-3 bg-rose-600 text-white rounded-xl hover:bg-rose-700 font-medium shadow-sm hover:shadow hover:-translate-y-0.5 transition-all cursor-pointer"
+                    className="flex-1 px-4 py-3 bg-teal-600 text-white rounded-xl hover:bg-teal-700 font-medium shadow-sm hover:shadow hover:-translate-y-0.5 transition-all cursor-pointer"
                   >
                     {editingId ? 'Guardar Cambios' : 'Crear Categoría'}
                   </button>
@@ -415,7 +415,7 @@ export default function AdminCategoriesPage() {
               filteredCategories.map((category) => (
                 <tr
                   key={category.id}
-                  className="hover:bg-rose-50 cursor-pointer transition-colors"
+                  className="hover:bg-teal-50 cursor-pointer transition-colors"
                   onClick={() => handleViewProducts(category)}
                 >
                   <td className="px-6 py-4">
@@ -433,7 +433,7 @@ export default function AdminCategoriesPage() {
                       </td>
                       <td className="px-6 py-4">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${category.product_count > 0
-                          ? 'bg-blue-100 text-blue-700'
+                          ? 'bg-teal-100 text-teal-700'
                           : 'bg-gray-100 text-gray-500'
                           }`}>
                           {category.product_count} producto{category.product_count !== 1 ? 's' : ''}
@@ -446,7 +446,7 @@ export default function AdminCategoriesPage() {
                         <div className="flex justify-end gap-2">
                           <button
                             onClick={() => handleEdit(category)}
-                            className="px-3 py-1 text-blue-600 hover:bg-blue-50 rounded-lg text-sm cursor-pointer"
+                            className="px-3 py-1 text-teal-600 hover:bg-teal-50 rounded-lg text-sm cursor-pointer"
                           >
                             Editar
                           </button>
@@ -494,12 +494,12 @@ export default function AdminCategoriesPage() {
 
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden m-4">
             {/* Header */}
-            <div className="bg-gradient-to-r from-rose-500 to-rose-600 px-6 py-5 flex justify-between items-center">
+            <div className="bg-gradient-to-r from-teal-500 to-teal-600 px-6 py-5 flex justify-between items-center">
               <div className="flex items-center gap-3">
                 <span className="text-4xl">{viewingCategory.icon}</span>
                 <div>
                   <h2 className="text-xl font-bold text-white">{viewingCategory.name}</h2>
-                  <p className="text-rose-100 text-sm">{viewingCategory.product_count} producto{viewingCategory.product_count !== 1 ? 's' : ''}</p>
+                  <p className="text-teal-100 text-sm">{viewingCategory.product_count} producto{viewingCategory.product_count !== 1 ? 's' : ''}</p>
                 </div>
               </div>
               <button
@@ -514,7 +514,7 @@ export default function AdminCategoriesPage() {
             <div className="p-6">
               {loadingProducts ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-10 w-10 border-4 border-rose-600 border-t-transparent" />
+                  <div className="animate-spin rounded-full h-10 w-10 border-4 border-teal-600 border-t-transparent" />
                 </div>
               ) : categoryProducts.length === 0 ? (
                 <div className="text-center py-12">
@@ -544,7 +544,7 @@ export default function AdminCategoriesPage() {
                           )}
                         </div>
                         <div className="flex items-center gap-3 mt-1">
-                          <span className="text-rose-600 font-bold">S/ {product.price.toFixed(2)}</span>
+                          <span className="text-teal-600 font-bold">S/ {product.price.toFixed(2)}</span>
                           <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${product.stock < 10
                             ? 'bg-red-100 text-red-700'
                             : 'bg-green-100 text-green-700'

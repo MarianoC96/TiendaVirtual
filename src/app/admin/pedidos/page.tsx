@@ -279,7 +279,7 @@ export default function AdminOrdersPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-rose-600 border-t-transparent" />
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-teal-600 border-t-transparent" />
       </div>
     );
   }
@@ -298,7 +298,7 @@ export default function AdminOrdersPage() {
           <select
             value={exportMonth}
             onChange={(e) => setExportMonth(parseInt(e.target.value))}
-            className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 focus:border-transparent cursor-pointer"
+            className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent cursor-pointer"
           >
             {MONTHS.map(m => (
               <option key={m.value} value={m.value}>{m.label}</option>
@@ -307,7 +307,7 @@ export default function AdminOrdersPage() {
           <select
             value={exportYear}
             onChange={(e) => setExportYear(parseInt(e.target.value))}
-            className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 focus:border-transparent cursor-pointer"
+            className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent cursor-pointer"
           >
             {years.map(y => (
               <option key={y} value={y}>{y}</option>
@@ -392,7 +392,7 @@ export default function AdminOrdersPage() {
                         value={order.status}
                         onChange={(e) => updateOrderStatus(order.id, e.target.value)}
                         disabled={updatingStatus === order.id}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border cursor-pointer shadow-sm hover:shadow focus:ring-2 focus:ring-rose-400 focus:outline-none transition-all ${statusOption.color} ${updatingStatus === order.id ? 'opacity-50' : ''}`}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border cursor-pointer shadow-sm hover:shadow focus:ring-2 focus:ring-teal-400 focus:outline-none transition-all ${statusOption.color} ${updatingStatus === order.id ? 'opacity-50' : ''}`}
                         style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}
                       >
                         {STATUS_OPTIONS.map(opt => (
@@ -410,7 +410,7 @@ export default function AdminOrdersPage() {
                       <div className="flex justify-end gap-1">
                         <button
                           onClick={() => setViewingOrder(order)}
-                          className="p-2 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                          className="p-2 text-gray-500 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors cursor-pointer"
                           title="Ver detalles"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -631,7 +631,7 @@ export default function AdminOrdersPage() {
                     setViewingOrder({ ...viewingOrder, status: e.target.value });
                   }}
                   disabled={updatingStatus === viewingOrder.id}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium border cursor-pointer shadow-sm hover:shadow focus:ring-2 focus:ring-rose-400 focus:outline-none transition-all ${getStatusOption(viewingOrder.status).color}`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium border cursor-pointer shadow-sm hover:shadow focus:ring-2 focus:ring-teal-400 focus:outline-none transition-all ${getStatusOption(viewingOrder.status).color}`}
                   style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}
                 >
                   {STATUS_OPTIONS.map(opt => (

@@ -4,11 +4,11 @@ import Link from 'next/link';
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-rose-50 via-orange-50 to-amber-50">
+    <section className="relative overflow-hidden bg-gradient-to-br from-teal-50 via-cyan-50 to-amber-50">
       {/* Decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-rose-200/40 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-orange-200/40 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-teal-200/40 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-cyan-200/40 rounded-full blur-3xl" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-100/30 rounded-full blur-3xl" />
       </div>
 
@@ -24,7 +24,7 @@ export default function Hero() {
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-gray-900">
               Tazas que cuentan
               <br />
-              <span className="bg-gradient-to-r from-rose-600 to-orange-500 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-teal-600 to-cyan-500 bg-clip-text text-transparent">
                 tu historia
               </span>
             </h1>
@@ -37,7 +37,7 @@ export default function Hero() {
             <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
               <Link
                 href="/productos"
-                className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-rose-600 to-orange-500 text-white font-bold text-lg rounded-full shadow-lg shadow-rose-500/30 hover:shadow-rose-500/50 hover:scale-105 transition-all duration-300"
+                className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-teal-600 to-cyan-500 text-white font-bold text-lg rounded-full shadow-lg shadow-teal-500/30 hover:shadow-teal-500/50 hover:scale-105 transition-all duration-300"
               >
                 Diseña la Tuya
                 <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -56,15 +56,15 @@ export default function Hero() {
             {/* Stats */}
             <div className="flex flex-wrap gap-8 pt-8 justify-center lg:justify-start">
               <div className="text-center">
-                <p className="text-3xl font-bold text-rose-600">5000+</p>
+                <p className="text-3xl font-bold text-teal-600">5000+</p>
                 <p className="text-sm text-gray-500">Clientes Felices</p>
               </div>
               <div className="text-center">
-                <p className="text-3xl font-bold text-rose-600">24h</p>
+                <p className="text-3xl font-bold text-teal-600">24h</p>
                 <p className="text-sm text-gray-500">Producción</p>
               </div>
               <div className="text-center">
-                <p className="text-3xl font-bold text-rose-600">100%</p>
+                <p className="text-3xl font-bold text-teal-600">100%</p>
                 <p className="text-sm text-gray-500">Personalizable</p>
               </div>
             </div>
@@ -90,8 +90,8 @@ export default function Hero() {
               <div className="absolute -bottom-4 -right-4 bg-white rounded-2xl shadow-xl p-4">
                 <div className="flex items-center gap-2">
                   <div className="flex -space-x-2">
-                    <div className="w-8 h-8 bg-rose-400 rounded-full border-2 border-white" />
-                    <div className="w-8 h-8 bg-orange-400 rounded-full border-2 border-white" />
+                    <div className="w-8 h-8 bg-teal-400 rounded-full border-2 border-white" />
+                    <div className="w-8 h-8 bg-cyan-400 rounded-full border-2 border-white" />
                     <div className="w-8 h-8 bg-amber-400 rounded-full border-2 border-white" />
                   </div>
                   <div>

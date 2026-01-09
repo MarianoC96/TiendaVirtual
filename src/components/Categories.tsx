@@ -36,7 +36,7 @@ export default function Categories() {
   }, []);
 
   return (
-    <section className="py-16 bg-gradient-to-br from-rose-50 to-orange-50">
+    <section className="py-16 bg-gradient-to-br from-teal-50 to-cyan-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
@@ -51,7 +51,7 @@ export default function Categories() {
         {/* Categories Grid */}
         {loading ? (
           <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-rose-600 border-t-transparent" />
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-teal-600 border-t-transparent" />
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -61,10 +61,10 @@ export default function Categories() {
                 href={`/productos?categoria=${category.slug}`}
                 className="group bg-white rounded-2xl p-6 text-center shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
               >
-                <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-rose-100 to-orange-100 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
+                <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
                   {category.icon}
                 </div>
-                <h3 className="font-semibold text-gray-900 group-hover:text-rose-600 transition-colors">
+                <h3 className="font-semibold text-gray-900 group-hover:text-teal-600 transition-colors">
                   {category.name}
                 </h3>
               </Link>

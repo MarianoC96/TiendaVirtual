@@ -36,7 +36,7 @@ export default function PromoBanner() {
         : `S/ ${discount.discount_value} OFF`;
 
     return (
-        <div className="fixed top-16 lg:top-20 left-0 right-0 z-40 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white py-2 px-4 shadow-sm">
+        <div className="fixed top-16 lg:top-20 left-0 right-0 z-40 bg-gradient-to-r from-teal-600 via-teal-500 to-cyan-500 text-white py-2 px-4 shadow-sm">
             <div className="max-w-7xl mx-auto flex items-center justify-center gap-3 text-sm">
                 <span className="text-base">🛒</span>
                 <span className="font-medium">

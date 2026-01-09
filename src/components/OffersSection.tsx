@@ -116,8 +116,8 @@ export default function OffersSection() {
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center py-20 bg-rose-50">
-                <div className="animate-spin rounded-full h-12 w-12 border-4 border-rose-600 border-t-transparent" />
+            <div className="flex justify-center items-center py-20 bg-teal-50">
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-teal-600 border-t-transparent" />
             </div>
         );
     }
@@ -137,7 +137,7 @@ export default function OffersSection() {
                 {/* Header & Search */}
                 <div className="text-center mb-12">
                     <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6 tracking-tight">
-                        <span className="bg-gradient-to-r from-rose-600 to-orange-500 bg-clip-text text-transparent">
+                        <span className="bg-gradient-to-r from-teal-600 to-cyan-500 bg-clip-text text-transparent">
                             Nuestras Ofertas
                         </span>
                     </h1>
@@ -156,7 +156,7 @@ export default function OffersSection() {
                             <select
                                 value={selectedCategory}
                                 onChange={(e) => setSelectedCategory(e.target.value)}
-                                className="block w-full pl-10 pr-10 py-3 border-none bg-gray-50 rounded-xl text-gray-700 focus:ring-2 focus:ring-rose-500 focus:bg-white transition-all appearance-none cursor-pointer hover:bg-gray-100 font-medium"
+                                className="block w-full pl-10 pr-10 py-3 border-none bg-gray-50 rounded-xl text-gray-700 focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all appearance-none cursor-pointer hover:bg-gray-100 font-medium"
                             >
                                 <option value="all">Todas las Categorías</option>
                                 {categories.map(cat => (
@@ -207,19 +207,19 @@ export default function OffersSection() {
                         {banners.map((banner) => (
                             <div
                                 key={banner.id}
-                                className="relative overflow-hidden rounded-3xl bg-white shadow-xl hover:shadow-2xl transition-shadow border border-rose-50 p-8 flex items-center justify-between group cursor-default"
+                                className="relative overflow-hidden rounded-3xl bg-white shadow-xl hover:shadow-2xl transition-shadow border border-teal-50 p-8 flex items-center justify-between group cursor-default"
                             >
-                                <div className="absolute inset-0 bg-gradient-to-br from-rose-50 via-white to-orange-50 opacity-80 group-hover:opacity-100 transition-opacity" />
-                                <div className="absolute -right-10 -top-10 w-40 h-40 bg-orange-100 rounded-full blur-3xl opacity-50 group-hover:opacity-70 transition-opacity" />
+                                <div className="absolute inset-0 bg-gradient-to-br from-teal-50 via-white to-cyan-50 opacity-80 group-hover:opacity-100 transition-opacity" />
+                                <div className="absolute -right-10 -top-10 w-40 h-40 bg-cyan-100 rounded-full blur-3xl opacity-50 group-hover:opacity-70 transition-opacity" />
 
                                 <div className="relative z-10">
-                                    <div className="inline-block px-3 py-1 bg-white/80 backdrop-blur-sm rounded-full text-xs font-bold text-rose-600 uppercase tracking-wider mb-3 shadow-sm">
+                                    <div className="inline-block px-3 py-1 bg-white/80 backdrop-blur-sm rounded-full text-xs font-bold text-teal-600 uppercase tracking-wider mb-3 shadow-sm">
                                         Oferta Especial
                                     </div>
                                     <h3 className="text-3xl font-black text-gray-900 mb-2 leading-tight">
                                         {banner.category?.name}
                                     </h3>
-                                    <div className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-rose-600 to-orange-600">
+                                    <div className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-cyan-600">
                                         {banner.discount_type === 'percentage'
                                             ? `${banner.discount_value}% OFF`
                                             : `-S/ ${banner.discount_value}`
@@ -243,7 +243,7 @@ export default function OffersSection() {
                                     <div className="relative group h-full">
                                         {product.discount_info && (
                                             <div className="absolute top-4 right-4 z-20">
-                                                <div className="bg-rose-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg shadow-rose-200">
+                                                <div className="bg-teal-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg shadow-teal-200">
                                                     {product.discount_info.label}
                                                 </div>
                                             </div>
@@ -267,7 +267,7 @@ export default function OffersSection() {
                         <h3 className="text-2xl font-bold text-gray-900 mb-2">No encontramos resultados</h3>
                         <p className="text-gray-500">
                             Intenta ajustar tus filtros o buscar con otro término.<br />
-                            {selectedCategory !== 'all' && <span className="text-rose-600 font-medium mt-2 block">Tip: Prueba cambiando la categoría a "Todas"</span>}
+                            {selectedCategory !== 'all' && <span className="text-teal-600 font-medium mt-2 block">Tip: Prueba cambiando la categoría a "Todas"</span>}
                         </p>
                         <button
                             onClick={() => { setSearchTerm(''); setSelectedCategory('all'); }}

@@ -116,7 +116,7 @@ export default function AccesosPage() {
     if (loading) {
         return (
             <div className="flex items-center justify-center py-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent" />
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-teal-600 border-t-transparent" />
             </div>
         );
     }
@@ -135,7 +135,7 @@ export default function AccesosPage() {
                 <div className="lg:col-span-1">
                     <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
                         {/* Barra de búsqueda */}
-                        <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-rose-50 to-pink-50">
+                        <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-teal-50 to-cyan-50">
                             <div className="relative">
                                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -147,7 +147,7 @@ export default function AccesosPage() {
                                     placeholder="Buscar trabajador..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+                                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
                                 />
                             </div>
                         </div>
@@ -179,12 +179,12 @@ export default function AccesosPage() {
                                             key={worker.id}
                                             onClick={() => handleSelectWorker(worker)}
                                             className={`w-full text-left p-4 rounded-xl transition-all ${selectedWorker?.id === worker.id
-                                                ? 'bg-indigo-50 border-2 border-indigo-300 shadow-sm'
+                                                ? 'bg-teal-50 border-2 border-teal-300 shadow-sm'
                                                 : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'
                                                 }`}
                                         >
                                             <div className="flex items-center gap-3">
-                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${selectedWorker?.id === worker.id ? 'bg-indigo-500' : 'bg-gray-400'
+                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${selectedWorker?.id === worker.id ? 'bg-teal-500' : 'bg-gray-400'
                                                     }`}>
                                                     {worker.name.charAt(0).toUpperCase()}
                                                 </div>
@@ -215,10 +215,10 @@ export default function AccesosPage() {
                         {selectedWorker ? (
                             <>
                                 {/* Header del panel de permisos */}
-                                <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-rose-50 to-pink-50">
+                                <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-teal-50 to-cyan-50">
                                     <div className="flex justify-between items-start">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-14 h-14 rounded-full bg-indigo-500 flex items-center justify-center text-white text-2xl font-bold">
+                                            <div className="w-14 h-14 rounded-full bg-teal-500 flex items-center justify-center text-white text-2xl font-bold">
                                                 {selectedWorker.name.charAt(0).toUpperCase()}
                                             </div>
                                             <div>
@@ -229,7 +229,7 @@ export default function AccesosPage() {
                                         <button
                                             onClick={handleSave}
                                             disabled={saving === selectedWorker.id}
-                                            className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-indigo-200"
+                                            className="px-5 py-2.5 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-colors disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-teal-200"
                                         >
                                             {saving === selectedWorker.id ? (
                                                 <>
@@ -275,7 +275,7 @@ export default function AccesosPage() {
                                                 <label
                                                     key={permission}
                                                     className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${isSelected
-                                                        ? 'border-indigo-300 bg-indigo-50 shadow-sm'
+                                                        ? 'border-teal-300 bg-teal-50 shadow-sm'
                                                         : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                                                         }`}
                                                 >
@@ -283,7 +283,7 @@ export default function AccesosPage() {
                                                         type="checkbox"
                                                         checked={isSelected}
                                                         onChange={() => handleTogglePermission(permission)}
-                                                        className="w-5 h-5 mt-0.5 text-indigo-600 border-gray-300 rounded focus:ring-rose-500"
+                                                        className="w-5 h-5 mt-0.5 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
                                                     />
                                                     <div className="flex-1">
                                                         <div className="flex items-center gap-2">
@@ -297,10 +297,10 @@ export default function AccesosPage() {
                                         })}
                                     </div>
 
-                                    <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                                    <div className="mt-6 p-4 bg-teal-50 rounded-xl border border-teal-100">
                                         <div className="flex gap-3">
-                                            <span className="text-blue-500">💡</span>
-                                            <p className="text-sm text-blue-700">
+                                            <span className="text-teal-500">💡</span>
+                                            <p className="text-sm text-teal-700">
                                                 Los permisos se aplicarán cuando el trabajador inicie sesión nuevamente.
                                             </p>
                                         </div>

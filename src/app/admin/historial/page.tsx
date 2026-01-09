@@ -257,7 +257,7 @@ export default function HistorialPedidosPage() {
     if (loading) {
         return (
             <div className="flex items-center justify-center py-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-4 border-rose-600 border-t-transparent" />
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-teal-600 border-t-transparent" />
             </div>
         );
     }
@@ -286,7 +286,7 @@ export default function HistorialPedidosPage() {
                         <select
                             value={selectedYear}
                             onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                            className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-400 focus:outline-none"
+                            className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-400 focus:outline-none"
                         >
                             {yearOptions.map(year => (
                                 <option key={year} value={year}>{year}</option>
@@ -298,7 +298,7 @@ export default function HistorialPedidosPage() {
                         <select
                             value={selectedMonth}
                             onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                            className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-400 focus:outline-none"
+                            className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-400 focus:outline-none"
                         >
                             {MONTHS.map(month => (
                                 <option key={month.value} value={month.value}>{month.label}</option>
@@ -310,7 +310,7 @@ export default function HistorialPedidosPage() {
                         {selectedMonth > 0 && (
                             <button
                                 onClick={() => exportMonth(selectedMonth)}
-                                className="px-4 py-2 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors cursor-pointer"
+                                className="px-4 py-2 bg-teal-600 text-white rounded-xl font-medium hover:bg-teal-700 transition-colors cursor-pointer"
                             >
                                 📊 Exportar Mes
                             </button>
@@ -318,7 +318,7 @@ export default function HistorialPedidosPage() {
                         <button
                             onClick={exportYear}
                             disabled={exporting}
-                            className="px-4 py-2 bg-rose-600 text-white rounded-xl font-medium hover:bg-rose-700 transition-colors disabled:opacity-50 cursor-pointer"
+                            className="px-4 py-2 bg-teal-600 text-white rounded-xl font-medium hover:bg-teal-700 transition-colors disabled:opacity-50 cursor-pointer"
                         >
                             {exporting ? '⏳ Exportando...' : '📊 Exportar Año Completo'}
                         </button>
@@ -334,7 +334,7 @@ export default function HistorialPedidosPage() {
                 </div>
                 <div className="bg-white rounded-2xl shadow-sm p-4">
                     <p className="text-sm text-gray-500">Ingresos Activos</p>
-                    <p className="text-2xl font-bold text-emerald-600">S/ {stats.totalRevenue.toFixed(2)}</p>
+                    <p className="text-2xl font-bold text-teal-600">S/ {stats.totalRevenue.toFixed(2)}</p>
                 </div>
                 <div className="bg-white rounded-2xl shadow-sm p-4">
                     <p className="text-sm text-gray-500">Cancelados</p>
@@ -417,7 +417,7 @@ export default function HistorialPedidosPage() {
                                     <td className="px-4 py-4 text-right">
                                         <button
                                             onClick={() => setViewingOrder(order)}
-                                            className="p-2 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                                            className="p-2 text-gray-500 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors cursor-pointer"
                                             title="Ver detalles"
                                         >
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -441,11 +441,11 @@ export default function HistorialPedidosPage() {
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Modal Header */}
-                        <div className="bg-gradient-to-r from-rose-500 to-orange-400 text-white p-6 rounded-t-2xl">
+                        <div className="bg-gradient-to-r from-teal-500 to-cyan-400 text-white p-6 rounded-t-2xl">
                             <div className="flex justify-between items-center">
                                 <div>
                                     <h2 className="text-2xl font-bold">Pedido #{viewingOrder.id}</h2>
-                                    <p className="text-rose-100">
+                                    <p className="text-teal-100">
                                         {new Date(viewingOrder.created_at).toLocaleString('es-PE')}
                                     </p>
                                 </div>
@@ -508,7 +508,7 @@ export default function HistorialPedidosPage() {
                                     </h4>
                                     <p className="text-gray-700">{viewingOrder.payment_method || 'WhatsApp'}</p>
                                 </div>
-                                <div className="bg-rose-50 rounded-xl p-4">
+                                <div className="bg-teal-50 rounded-xl p-4">
                                     <h4 className="font-semibold text-gray-900 mb-2">💰 Resumen</h4>
                                     <p className="flex justify-between text-sm">
                                         <span>Subtotal:</span>

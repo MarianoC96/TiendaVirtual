@@ -257,14 +257,14 @@ export default function CartPage() {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center py-16 px-4">
         <div className="text-center">
-          <div className="w-24 h-24 mx-auto mb-6 bg-rose-50 rounded-full flex items-center justify-center">
+          <div className="w-24 h-24 mx-auto mb-6 bg-teal-50 rounded-full flex items-center justify-center">
             <span className="text-4xl">☕</span>
           </div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Tu carrito está vacío</h2>
           <p className="text-gray-500 mb-6">¡Encuentra la taza perfecta para ti!</p>
           <Link
             href="/productos"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-rose-600 to-orange-500 text-white font-semibold rounded-full hover:shadow-lg transition-all"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-500 text-white font-semibold rounded-full hover:shadow-lg transition-all"
           >
             Ver Productos
           </Link>
@@ -276,14 +276,14 @@ export default function CartPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Link href="/productos" className="inline-flex items-center gap-2 text-gray-600 hover:text-rose-600 mb-6 transition-colors">
+        <Link href="/productos" className="inline-flex items-center gap-2 text-gray-600 hover:text-teal-600 mb-6 transition-colors">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
           Seguir Comprando
         </Link>
 
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-rose-600 to-orange-500 bg-clip-text text-transparent mb-8">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-cyan-500 bg-clip-text text-transparent mb-8">
           Tu Carrito
         </h1>
 
@@ -311,7 +311,7 @@ export default function CartPage() {
                         </span>
                       )}
                     </div>
-                    <p className="text-lg font-bold text-rose-600">
+                    <p className="text-lg font-bold text-teal-600">
                       S/ {(item.product.price * item.quantity).toFixed(2)}
                     </p>
                   </div>
@@ -321,7 +321,7 @@ export default function CartPage() {
                       <button
                         onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
                         disabled={item.quantity <= 1}
-                        className="p-2 text-gray-600 hover:text-rose-600 disabled:opacity-50 cursor-pointer"
+                        className="p-2 text-gray-600 hover:text-teal-600 disabled:opacity-50 cursor-pointer"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
@@ -330,7 +330,7 @@ export default function CartPage() {
                       <span className="px-4 py-1 font-medium">{item.quantity}</span>
                       <button
                         onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                        className="p-2 text-gray-600 hover:text-rose-600 cursor-pointer"
+                        className="p-2 text-gray-600 hover:text-teal-600 cursor-pointer"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -358,8 +358,8 @@ export default function CartPage() {
 
               {/* Cart Value Discount Banner */}
               {cartDiscount && total < cartDiscount.min_cart_value && (
-                <div className="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-xl p-3">
-                  <p className="text-sm text-emerald-700">
+                <div className="bg-gradient-to-r from-teal-50 to-cyan-50 border border-teal-200 rounded-xl p-3">
+                  <p className="text-sm text-teal-700">
                     🛒 ¡Agrega <span className="font-bold">S/ {(cartDiscount.min_cart_value - total).toFixed(2)}</span> más para obtener{' '}
                     <span className="font-bold">
                       {cartDiscount.discount_type === 'percentage'
@@ -372,12 +372,12 @@ export default function CartPage() {
 
               {/* Applied Cart Discount Badge */}
               {cartDiscountAmount > 0 && cartDiscount && (
-                <div className="bg-gradient-to-r from-emerald-500 to-green-500 rounded-xl p-3 text-white">
+                <div className="bg-gradient-to-r from-teal-500 to-cyan-500 rounded-xl p-3 text-white">
                   <div className="flex items-center gap-2">
                     <span className="text-lg">🎉</span>
                     <div>
                       <p className="font-medium text-sm">{cartDiscount.name}</p>
-                      <p className="text-emerald-100 text-xs">
+                      <p className="text-teal-100 text-xs">
                         {cartDiscount.discount_type === 'percentage'
                           ? `${cartDiscount.discount_value}% de descuento aplicado`
                           : `S/ ${cartDiscount.discount_value} de descuento aplicado`}
@@ -391,10 +391,10 @@ export default function CartPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Cupón de descuento</label>
                 {appliedCoupon ? (
-                  <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex justify-between items-center">
+                  <div className="bg-cyan-50 border border-cyan-200 rounded-xl p-3 flex justify-between items-center">
                     <div>
-                      <p className="font-medium text-green-700">{appliedCoupon.code}</p>
-                      <p className="text-sm text-green-600">-S/ {appliedCoupon.discount_amount.toFixed(2)}</p>
+                      <p className="font-medium text-cyan-700">{appliedCoupon.code}</p>
+                      <p className="text-sm text-cyan-600">-S/ {appliedCoupon.discount_amount.toFixed(2)}</p>
                     </div>
                     <button onClick={handleRemoveCoupon} className="text-gray-400 hover:text-red-500 cursor-pointer">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -409,7 +409,7 @@ export default function CartPage() {
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                       placeholder="Código"
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"
                     />
                     <button
                       onClick={handleApplyCoupon}
@@ -430,20 +430,20 @@ export default function CartPage() {
                   <span>S/ {total.toFixed(2)}</span>
                 </div>
                 {appliedCoupon && (
-                  <div className="flex justify-between text-green-600">
+                  <div className="flex justify-between text-cyan-600">
                     <span>Cupón ({appliedCoupon.code})</span>
                     <span>-S/ {appliedCoupon.discount_amount.toFixed(2)}</span>
                   </div>
                 )}
                 {cartDiscountAmount > 0 && (
-                  <div className="flex justify-between text-emerald-600">
+                  <div className="flex justify-between text-teal-600">
                     <span>Desc. por carrito</span>
                     <span>-S/ {cartDiscountAmount.toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-lg font-bold pt-2 border-t">
                   <span>Total</span>
-                  <span className="text-rose-600">S/ {finalTotal.toFixed(2)}</span>
+                  <span className="text-teal-600">S/ {finalTotal.toFixed(2)}</span>
                 </div>
               </div>
 
@@ -456,24 +456,24 @@ export default function CartPage() {
                     value={guestName}
                     onChange={(e) => setGuestName(e.target.value)}
                     placeholder="Tu nombre"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                   <input
                     type="email"
                     value={guestEmail}
                     onChange={(e) => setGuestEmail(e.target.value)}
                     placeholder="Tu email"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                   <input
                     type="tel"
                     value={guestPhone}
                     onChange={(e) => setGuestPhone(e.target.value)}
                     placeholder="Tu teléfono"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                   <p className="text-xs text-gray-500">
-                    ¿Ya tienes cuenta? <Link href="/login" className="text-rose-600 hover:underline">Inicia sesión</Link>
+                    ¿Ya tienes cuenta? <Link href="/login" className="text-teal-600 hover:underline">Inicia sesión</Link>
                   </p>
                 </div>
               )}
@@ -486,7 +486,7 @@ export default function CartPage() {
                   onChange={(e) => setShippingAddress(e.target.value)}
                   placeholder="Dirección completa (calle, número, distrito, referencia)"
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
                 />
               </div>
 
@@ -494,7 +494,7 @@ export default function CartPage() {
               <button
                 onClick={handleWhatsAppOrder}
                 disabled={!canCheckout || orderLoading}
-                className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-4 bg-gradient-to-r from-cyan-500 to-teal-600 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
               >
                 {orderLoading ? (
                   <>
