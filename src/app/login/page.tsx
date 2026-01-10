@@ -40,8 +40,7 @@ export default function LoginPage() {
           {/* Header */}
           <div className="text-center mb-8">
             <Link href="/" className="inline-flex items-center gap-2 mb-4">
-              <span className="text-3xl">☕</span>
-              <span className="text-2xl font-bold text-teal-600">CustomCups</span>
+              <img src="/logo.png" alt="MAE Party & Print" className="h-24 w-auto" />
             </Link>
             <h1 className="text-2xl font-bold text-gray-900">Iniciar Sesión</h1>
             <p className="text-gray-500 mt-2">Bienvenido de vuelta</p>
@@ -102,7 +101,7 @@ export default function LoginPage() {
           {/* Demo Credentials */}
           <div className="mt-6 p-4 bg-gray-50 rounded-xl">
             <p className="text-xs text-gray-500 text-center mb-2">Credenciales de prueba (Admin):</p>
-            <p className="text-xs text-gray-700 text-center font-mono">admin@customcups.com / admin123</p>
+            <p className="text-xs text-gray-700 text-center font-mono">admin@maepartyprint.com / admin123</p>
           </div>
         </div>
       </div>

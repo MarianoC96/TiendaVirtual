@@ -37,6 +37,7 @@ interface Order {
     deletion_reason: string | null;
     is_deleted: boolean;
     can_edit: boolean;
+    order_code: string | null;
 }
 
 const MONTHS = [
@@ -109,9 +110,9 @@ export default function HistorialPedidosPage() {
         }
     };
 
-    // Check if manually deleted (not expired)
+    // Check if manually deleted by admin (not auto-expired by system)
     const isManuallyDeleted = (order: Order) => {
-        return order.is_deleted && order.deletion_reason === 'manual';
+        return order.is_deleted && order.deleted_by?.startsWith('admin:');
     };
 
     // Group orders by month for statistics
@@ -471,6 +472,9 @@ export default function HistorialPedidosPage() {
                                     <div className="text-sm text-red-700 space-y-1">
                                         <p><strong>Eliminado por:</strong> {getDeletedByName(viewingOrder.deleted_by)}</p>
                                         <p><strong>Fecha:</strong> {viewingOrder.deleted_at ? new Date(viewingOrder.deleted_at).toLocaleString('es-PE') : 'N/A'}</p>
+                                        {viewingOrder.deletion_reason && (
+                                            <p><strong>Motivo:</strong> {viewingOrder.deletion_reason}</p>
+                                        )}
                                     </div>
                                 </div>
                             )}

@@ -98,10 +98,7 @@ export default function Header() {
 
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2">
-              <span className="text-2xl">☕</span>
-              <span className="text-xl lg:text-2xl font-extrabold text-teal-600">
-                CustomCups
-              </span>
+              <img src="/logo.png" alt="MAE Party & Print" className="h-28 w-auto" />
             </Link>
 
             {/* Desktop Navigation */}
@@ -237,8 +234,7 @@ export default function Header() {
             {/* Mobile Menu Header */}
             <div className="flex items-center justify-between p-4 border-b">
               <Link href="/" onClick={() => setShowMobileMenu(false)} className="flex items-center gap-2">
-                <span className="text-2xl">☕</span>
-                <span className="text-xl font-bold text-teal-600">CustomCups</span>
+                <img src="/logo.png" alt="MAE Party & Print" className="h-20 w-auto" />
               </Link>
               <button onClick={() => setShowMobileMenu(false)} className="p-2 text-gray-500">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

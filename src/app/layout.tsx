@@ -11,7 +11,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "CustomCups - Productos Personalizados",
+  title: "MAE Party & Print - Productos Personalizados",
   description: "Crea productos únicos con tus fotos y diseños. El regalo perfecto para cualquier ocasión.",
 };
 

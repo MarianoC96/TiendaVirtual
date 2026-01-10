@@ -57,8 +57,28 @@ export async function POST(request: Request) {
       discountInfo
     } = await request.json();
 
+    // Generate unique order code (P0000XXX format)
+    // Get the last order to determine next code number
+    const { data: lastOrder } = await db
+      .from('orders')
+      .select('order_code')
+      .not('order_code', 'is', null)
+      .order('id', { ascending: false })
+      .limit(1)
+      .single();
+
+    let nextNumber = 1;
+    if (lastOrder?.order_code) {
+      const lastNumber = parseInt(lastOrder.order_code.replace('P', ''));
+      if (!isNaN(lastNumber)) {
+        nextNumber = lastNumber + 1;
+      }
+    }
+    const orderCode = `P${nextNumber.toString().padStart(7, '0')}`;
+
     // Create order - try with discount_info first, fallback without if column doesn't exist
     const orderData: Record<string, unknown> = {
+      order_code: orderCode,
       user_id: userId || null,
       guest_email: guestEmail || null,
       guest_name: guestName || null,
@@ -107,30 +127,8 @@ export async function POST(request: Request) {
 
     if (orderError) throw orderError;
 
-    // Reduce stock for each product
-    for (const item of items as OrderItem[]) {
-      await db.rpc('update_product_stock', {
-        p_id: item.product.id,
-        p_quantity: item.quantity
-      }).then(async () => {
-        // If RPC doesn't exist, use direct update
-        const { data: product } = await db
-          .from('products')
-          .select('stock, total_sold')
-          .eq('id', item.product.id)
-          .single();
-
-        if (product) {
-          await db
-            .from('products')
-            .update({
-              stock: product.stock - item.quantity,
-              total_sold: product.total_sold + item.quantity
-            })
-            .eq('id', item.product.id);
-        }
-      });
-    }
+    // Note: Stock is NOT reduced here. It will be reduced when the order status changes to 'delivered'
+    // This allows for order cancellation/modification before delivery without affecting stock
 
     // Update coupon uses if a coupon was used
     if (couponCode) {
@@ -150,7 +148,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      orderId: order?.id
+      orderId: order?.id,
+      orderCode: orderCode
     });
   } catch (error) {
     console.error('Error creating order:', error);

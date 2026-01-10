@@ -9,12 +9,11 @@ export default function Footer() {
           {/* Brand */}
           <div className="lg:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <span className="text-3xl">☕</span>
-              <span className="text-2xl font-bold text-white">CustomCups</span>
+              <img src="/logo.png" alt="MAE Party & Print" className="h-24 w-auto bg-white rounded-lg p-1" />
             </Link>
             <p className="text-gray-400 mb-4 leading-relaxed">
-              Creamos tazas únicas y personalizadas para momentos especiales.
-              Tu diseño, tu historia, tu taza.
+              Creamos productos únicos y personalizados para momentos especiales.
+              Tu diseño, tu historia, tu celebración.
             </p>
             <div className="flex gap-4">
               <a href="#" className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-teal-600 transition-colors">
@@ -73,7 +72,7 @@ export default function Footer() {
                 <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
-                <span>hola@customcups.pe</span>
+                <span>hola@maepartyprint.pe</span>
               </li>
             </ul>
           </div>
@@ -85,7 +84,7 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-gray-400">
-              © 2026 CustomCups. Todos los derechos reservados.
+              © 2026 MAE Party & Print. Todos los derechos reservados.
             </p>
             <div className="flex items-center gap-4">
               <img src="https://cdn-icons-png.flaticon.com/128/349/349221.png" alt="Visa" className="h-6 opacity-70" />

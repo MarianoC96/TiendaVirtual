@@ -35,6 +35,7 @@ interface DiscountInfo {
 
 interface Order {
   id: number;
+  order_code: string | null;
   user_id: number | null;
   guest_email: string | null;
   guest_name: string | null;
@@ -172,23 +173,38 @@ export default function AdminOrdersPage() {
   };
 
   const [deletingOrder, setDeletingOrder] = useState<number | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<number | null>(null);
+  const [deleteReason, setDeleteReason] = useState('');
 
-  const handleDeleteOrder = async (orderId: number) => {
-    if (!confirm('¿Estás seguro de eliminar este pedido? Esta acción lo ocultará del panel pero quedará guardado en el sistema.')) {
+  const openDeleteModal = (orderId: number) => {
+    setOrderToDelete(orderId);
+    setDeleteReason('');
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteOrder = async () => {
+    if (!orderToDelete || !deleteReason.trim()) {
+      alert('Debes ingresar un motivo para eliminar el pedido');
       return;
     }
 
-    setDeletingOrder(orderId);
+    setDeletingOrder(orderToDelete);
     try {
-      const res = await fetch(`/api/admin/orders/${orderId}`, {
-        method: 'DELETE'
+      const res = await fetch(`/api/admin/orders/${orderToDelete}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: deleteReason.trim() })
       });
 
       if (res.ok) {
-        setOrders(orders.filter(o => o.id !== orderId));
-        if (viewingOrder?.id === orderId) {
+        setOrders(orders.filter(o => o.id !== orderToDelete));
+        if (viewingOrder?.id === orderToDelete) {
           setViewingOrder(null);
         }
+        setDeleteModalOpen(false);
+        setOrderToDelete(null);
+        setDeleteReason('');
       } else {
         alert('Error al eliminar el pedido');
       }
@@ -342,6 +358,7 @@ export default function AdminOrdersPage() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Código</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
@@ -361,8 +378,11 @@ export default function AdminOrdersPage() {
                     className={`transition-colors ${delayed ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-gray-50'}`}
                   >
                     <td className="px-4 py-4">
+                      <span className="text-gray-500 text-sm">#{order.id}</span>
+                    </td>
+                    <td className="px-4 py-4">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-gray-900">#{order.id}</span>
+                        <span className="font-bold text-gray-900 font-mono">{order.order_code || '-'}</span>
                         {delayed && (
                           <span className="px-2 py-0.5 bg-red-500 text-white text-xs font-medium rounded-full">
                             Atrasado
@@ -419,7 +439,7 @@ export default function AdminOrdersPage() {
                           </svg>
                         </button>
                         <button
-                          onClick={() => handleDeleteOrder(order.id)}
+                          onClick={() => openDeleteModal(order.id)}
                           disabled={deletingOrder === order.id}
                           className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                           title="Eliminar pedido"
@@ -453,7 +473,7 @@ export default function AdminOrdersPage() {
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto m-4">
             <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center z-10">
               <div className="flex items-center gap-3">
-                <h2 className="text-xl font-bold text-gray-900">Pedido #{viewingOrder.id}</h2>
+                <h2 className="text-xl font-bold text-gray-900">Pedido {viewingOrder.order_code || `#${viewingOrder.id}`}</h2>
                 {isOrderDelayed(viewingOrder) && (
                   <span className="px-2 py-1 bg-red-500 text-white text-xs font-medium rounded-full">
                     Atrasado
@@ -645,6 +665,71 @@ export default function AdminOrdersPage() {
                   ))}
                 </select>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmación de Eliminación */}
+      {deleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => {
+              setDeleteModalOpen(false);
+              setOrderToDelete(null);
+              setDeleteReason('');
+            }}
+          />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md m-4 p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Eliminar Pedido {orders.find(o => o.id === orderToDelete)?.order_code || `#${orderToDelete}`}</h3>
+            <p className="text-gray-500 text-sm mb-4">
+              Esta acción ocultará el pedido del panel pero quedará guardado en el historial.
+            </p>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Motivo de eliminación <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={deleteReason}
+                onChange={(e) => setDeleteReason(e.target.value)}
+                placeholder="Ej: Pedido duplicado, cliente canceló, error de sistema..."
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                rows={3}
+              />
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setDeleteModalOpen(false);
+                  setOrderToDelete(null);
+                  setDeleteReason('');
+                }}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeleteOrder}
+                disabled={!deleteReason.trim() || deletingOrder !== null}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+              >
+                {deletingOrder ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Eliminando...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Eliminar Pedido
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

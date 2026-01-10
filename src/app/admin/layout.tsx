@@ -8,12 +8,13 @@ import { useAuth } from '@/context/AuthContext';
 // Definición de items del menú con sus permisos requeridos
 const MENU_ITEMS = [
   { href: '/admin', label: 'Dashboard', permission: 'dashboard', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
-  { href: '/admin/productos', label: 'Productos', permission: 'productos', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
   { href: '/admin/pedidos', label: 'Pedidos', permission: 'pedidos', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
-  { href: '/admin/historial', label: 'Historial', permission: 'historial', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
   { href: '/admin/categorias', label: 'Categorías', permission: 'categorias', icon: 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z' },
+  { href: '/admin/productos', label: 'Productos', permission: 'productos', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
   { href: '/admin/descuentos', label: 'Descuentos', permission: 'descuentos', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
   { href: '/admin/cupones', label: 'Cupones', permission: 'cupones', icon: 'M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z' },
+  { href: '/admin/historial', label: 'Historial', permission: 'historial', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
+  { href: '/admin/usuarios', label: 'Usuarios', permission: 'usuarios', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z', adminOnly: true },
   { href: '/admin/accesos', label: 'Accesos', permission: 'accesos', icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z', adminOnly: true }
 ];
 
@@ -88,8 +89,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </button>
 
             <Link href="/admin" className="flex items-center gap-2">
-              <span className="text-xl lg:text-2xl">☕</span>
-              <span className="text-lg lg:text-xl font-bold text-teal-600 hidden sm:inline">CustomCups</span>
+              <img src="/logo.png" alt="MAE Party & Print" className="h-20 lg:h-28 w-auto" />
               <span className="text-xs bg-teal-50 text-teal-600 px-2 py-1 rounded-full font-medium hidden sm:inline">
                 {isAdmin ? 'Admin' : 'Staff'}
               </span>
@@ -175,8 +175,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <aside className="absolute left-0 top-0 bottom-0 w-72 bg-white shadow-xl">
             <div className="flex items-center justify-between p-4 border-b">
               <Link href="/admin" className="flex items-center gap-2">
-                <span className="text-xl">☕</span>
-                <span className="text-lg font-bold text-teal-600">CustomCups</span>
+                <img src="/logo.png" alt="MAE Party & Print" className="h-20 w-auto" />
               </Link>
               <button onClick={() => setSidebarOpen(false)} className="p-2 text-gray-500 hover:text-gray-700">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

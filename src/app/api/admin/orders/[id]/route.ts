@@ -30,8 +30,36 @@ export async function PATCH(
     const oldStatus = order.status;
     const items: OrderItem[] = order.items_json;
 
-    // If cancelling an order that wasn't already cancelled, restore stock
-    if (status === 'cancelled' && oldStatus !== 'cancelled') {
+    // Stock management based on 'delivered' status
+    // When order becomes 'delivered' -> reduce stock
+    // When order leaves 'delivered' status -> restore stock
+
+    const isBecomingDelivered = status === 'delivered' && oldStatus !== 'delivered';
+    const isLeavingDelivered = oldStatus === 'delivered' && status !== 'delivered';
+
+    // If order is becoming delivered, reduce stock
+    if (isBecomingDelivered) {
+      for (const item of items) {
+        const { data: product } = await db
+          .from('products')
+          .select('stock, total_sold')
+          .eq('id', item.product.id)
+          .single();
+
+        if (product) {
+          await db
+            .from('products')
+            .update({
+              stock: Math.max(0, product.stock - item.quantity),
+              total_sold: (product.total_sold || 0) + item.quantity
+            })
+            .eq('id', item.product.id);
+        }
+      }
+    }
+
+    // If order is leaving delivered status (e.g., cancelled or reverted), restore stock
+    if (isLeavingDelivered) {
       for (const item of items) {
         const { data: product } = await db
           .from('products')
@@ -44,28 +72,7 @@ export async function PATCH(
             .from('products')
             .update({
               stock: product.stock + item.quantity,
-              total_sold: product.total_sold - item.quantity
-            })
-            .eq('id', item.product.id);
-        }
-      }
-    }
-
-    // If un-cancelling an order (rare but possible), reduce stock again
-    if (oldStatus === 'cancelled' && status !== 'cancelled') {
-      for (const item of items) {
-        const { data: product } = await db
-          .from('products')
-          .select('stock, total_sold')
-          .eq('id', item.product.id)
-          .single();
-
-        if (product) {
-          await db
-            .from('products')
-            .update({
-              stock: product.stock - item.quantity,
-              total_sold: product.total_sold + item.quantity
+              total_sold: Math.max(0, (product.total_sold || 0) - item.quantity)
             })
             .eq('id', item.product.id);
         }
@@ -119,15 +126,19 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    // Get admin ID from request body (or default to 1 for now)
+    // Get admin ID and reason from request body
     let deletedBy = 'admin:1';
+    let deletionReason = 'Sin motivo especificado';
     try {
       const body = await request.json();
       if (body.adminId) {
         deletedBy = `admin:${body.adminId}`;
       }
+      if (body.reason) {
+        deletionReason = body.reason;
+      }
     } catch {
-      // No body provided, use default
+      // No body provided, use defaults
     }
 
     // Soft delete the order
@@ -136,7 +147,7 @@ export async function DELETE(
       .update({
         deleted_at: new Date().toISOString(),
         deleted_by: deletedBy,
-        deletion_reason: 'manual'
+        deletion_reason: deletionReason
       })
       .eq('id', parseInt(id));
 

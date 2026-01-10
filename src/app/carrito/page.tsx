@@ -203,11 +203,11 @@ export default function CartPage() {
         throw new Error('Failed to create order');
       }
 
-      const { orderId } = await res.json();
+      const { orderId, orderCode } = await res.json();
 
       // Now build and send WhatsApp message
       const storePhoneNumber = "51999888777";
-      let message = `🛒 *Nuevo Pedido #${orderId} - CustomCups*\n\n`;
+      let message = `🛒 *Nuevo Pedido ${orderCode} - MAE Party & Print*\n\n`;
 
       // Customer info
       if (isAuthenticated && user) {
