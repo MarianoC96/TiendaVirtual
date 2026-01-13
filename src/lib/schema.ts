@@ -8,6 +8,20 @@ export interface Category {
   description: string;
 }
 
+// Variant types
+export type VariantType = 'size' | 'capacity' | 'dimensions';
+
+export interface ProductVariant {
+  id: number;
+  product_id: number;
+  variant_type: VariantType;
+  variant_label: string;
+  price: number;
+  stock: number;
+  is_default: boolean;
+  created_at?: string;
+}
+
 export interface Product {
   id: number;
   name: string;
@@ -28,6 +42,11 @@ export interface Product {
   is_featured: boolean;
   is_on_sale: boolean;
   total_sold: number;
+  // Variant fields
+  has_variants?: boolean;
+  variant_type?: VariantType | null;
+  variants?: ProductVariant[];
+  selected_variant?: ProductVariant;
 }
 
 export interface CartItem {
@@ -60,7 +79,7 @@ export interface Discount {
 // Helper function for discount countdown
 export function getRemainingTime(endTime: string | null) {
   if (!endTime) return null;
-  
+
   const now = new Date().getTime();
   const end = new Date(endTime).getTime();
   const difference = end - now;

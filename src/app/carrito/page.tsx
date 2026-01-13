@@ -222,7 +222,10 @@ export default function CartPage() {
       message += `📦 *Productos:*\n`;
       items.forEach(item => {
         const hasCustomization = item.product.customization?.previewBase64;
-        message += `• ${item.product.name} (x${item.quantity}) - S/ ${(item.product.price * item.quantity).toFixed(2)}${hasCustomization ? ' ✨' : ''}\n`;
+        const variantLabel = item.product.selected_variant
+          ? ` (${item.product.selected_variant.label})`
+          : '';
+        message += `• ${item.product.name}${variantLabel} (x${item.quantity}) - S/ ${(item.product.price * item.quantity).toFixed(2)}${hasCustomization ? ' ✨' : ''}\n`;
       });
 
       message += `\n💰 *Subtotal:* S/ ${total.toFixed(2)}`;
@@ -303,10 +306,24 @@ export default function CartPage() {
                 <div className="flex-grow">
                   <div className="flex justify-between">
                     <div>
-                      <h3 className="font-semibold text-gray-900">{item.product.name}</h3>
+                      <h3 className="font-semibold text-gray-900">
+                        {item.product.name}
+                        {item.product.selected_variant && (
+                          <span className="ml-2 text-sm font-normal text-purple-600">
+                            ({item.product.selected_variant.label})
+                          </span>
+                        )}
+                      </h3>
                       <p className="text-sm text-gray-500">S/ {item.product.price.toFixed(2)}</p>
+                      {item.product.selected_variant && (
+                        <span className="inline-block mt-1 px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
+                          {item.product.selected_variant.type === 'size' && `👕 Talla: ${item.product.selected_variant.label}`}
+                          {item.product.selected_variant.type === 'capacity' && `🥤 ${item.product.selected_variant.label}`}
+                          {item.product.selected_variant.type === 'dimensions' && `📦 ${item.product.selected_variant.label}`}
+                        </span>
+                      )}
                       {item.product.customization?.previewBase64 && (
-                        <span className="inline-block mt-1 px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">
+                        <span className="inline-block mt-1 ml-1 px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">
                           ✨ Personalizado
                         </span>
                       )}
@@ -319,7 +336,7 @@ export default function CartPage() {
                   <div className="flex items-center justify-between mt-3">
                     <div className="flex items-center border border-gray-200 rounded-lg">
                       <button
-                        onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                        onClick={() => updateQuantity(item.product.id, item.quantity - 1, item.product.selected_variant?.id)}
                         disabled={item.quantity <= 1}
                         className="p-2 text-gray-600 hover:text-teal-600 disabled:opacity-50 cursor-pointer"
                       >
@@ -329,7 +346,7 @@ export default function CartPage() {
                       </button>
                       <span className="px-4 py-1 font-medium">{item.quantity}</span>
                       <button
-                        onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                        onClick={() => updateQuantity(item.product.id, item.quantity + 1, item.product.selected_variant?.id)}
                         className="p-2 text-gray-600 hover:text-teal-600 cursor-pointer"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -338,7 +355,7 @@ export default function CartPage() {
                       </button>
                     </div>
                     <button
-                      onClick={() => removeItem(item.product.id)}
+                      onClick={() => removeItem(item.product.id, item.product.selected_variant?.id)}
                       className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

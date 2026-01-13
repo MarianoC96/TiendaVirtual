@@ -4,6 +4,19 @@ import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { getRemainingTime } from '@/lib/schema';
 import { useEffect, useState } from 'react';
+import VariantSelector from './VariantSelector';
+
+type VariantType = 'size' | 'capacity' | 'dimensions';
+
+interface SelectedVariant {
+  id: number;
+  type: VariantType;
+  label: string;
+  price: number;
+  stock: number;
+  is_default: boolean;
+  in_stock: boolean;
+}
 
 interface Product {
   id: number;
@@ -28,18 +41,29 @@ interface Product {
     value: number;
     label: string;
   };
+  // Variant fields
+  has_variants?: boolean;
+  variant_type?: VariantType | null;
 }
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addItem, getItemQuantity } = useCart();
   const [timeRemaining, setTimeRemaining] = useState<ReturnType<typeof getRemainingTime>>(null);
+  const [selectedVariant, setSelectedVariant] = useState<SelectedVariant | null>(null);
 
-  const inCartQuantity = getItemQuantity(product.id);
-  // Fix stock check logic: handle both number (0/1) and boolean types
-  const isInStock = (typeof product.in_stock === 'number' ? product.in_stock === 1 : Boolean(product.in_stock)) && product.stock > 0;
+  // Get cart quantity - consider variant if selected
+  const inCartQuantity = getItemQuantity(product.id, selectedVariant?.id);
+
+  // Check stock - use variant stock if applicable
+  const isInStock = product.has_variants && selectedVariant
+    ? selectedVariant.in_stock && selectedVariant.stock > 0
+    : (typeof product.in_stock === 'number' ? product.in_stock === 1 : Boolean(product.in_stock)) && product.stock > 0;
+
+  // Calculate final price - use variant price if selected
+  const basePrice = selectedVariant ? selectedVariant.price : product.price;
   const finalPrice = product.discount_percentage && product.discount_percentage > 0
-    ? product.price * (1 - product.discount_percentage / 100)
-    : product.price;
+    ? basePrice * (1 - product.discount_percentage / 100)
+    : basePrice;
 
   useEffect(() => {
     if (product.discount_end_date) {
@@ -52,9 +76,20 @@ export default function ProductCard({ product }: { product: Product }) {
     }
   }, [product.discount_end_date]);
 
+  const handleVariantSelect = (variant: SelectedVariant) => {
+    setSelectedVariant(variant);
+  };
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    // For variant products, require a variant selection
+    if (product.has_variants && !selectedVariant) {
+      alert('Por favor selecciona una opción');
+      return;
+    }
+
     if (!isInStock) return;
 
     addItem({
@@ -65,9 +100,17 @@ export default function ProductCard({ product }: { product: Product }) {
       discount_percentage: product.discount_percentage,
       image_url: product.image_url,
       short_description: product.short_description,
-      stock: product.stock,
+      stock: selectedVariant ? selectedVariant.stock : product.stock,
       in_stock: isInStock,
-      discount_info: product.discount_info
+      discount_info: product.discount_info,
+      has_variants: product.has_variants,
+      variant_type: product.variant_type,
+      selected_variant: selectedVariant ? {
+        id: selectedVariant.id,
+        type: selectedVariant.type,
+        label: selectedVariant.label,
+        price: selectedVariant.price
+      } : undefined
     });
   };
 
@@ -89,8 +132,17 @@ export default function ProductCard({ product }: { product: Product }) {
             </span>
           )}
 
+          {/* Has Variants Badge */}
+          {product.has_variants && (
+            <span className="absolute top-3 right-3 px-2 py-1 bg-purple-500 text-white text-xs font-medium rounded-full">
+              {product.variant_type === 'size' && '👕 Tallas'}
+              {product.variant_type === 'capacity' && '🥤 Opciones'}
+              {product.variant_type === 'dimensions' && '📦 Tamaños'}
+            </span>
+          )}
+
           {/* Countdown Timer */}
-          {timeRemaining && !timeRemaining.isExpired && (
+          {timeRemaining && !timeRemaining.isExpired && !product.has_variants && (
             <div className="absolute top-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded-lg backdrop-blur-sm">
               ⏰ {timeRemaining.days}d {timeRemaining.hours}h
             </div>
@@ -99,10 +151,10 @@ export default function ProductCard({ product }: { product: Product }) {
           {/* Quick Add Button */}
           <button
             onClick={handleAddToCart}
-            disabled={!isInStock}
-            className={`absolute bottom-3 right-3 w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all ${isInStock
-              ? 'bg-teal-600 text-white hover:bg-teal-700 hover:scale-110'
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            disabled={!isInStock || (product.has_variants && !selectedVariant)}
+            className={`absolute bottom-3 right-3 w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all cursor-pointer ${isInStock && (!product.has_variants || selectedVariant)
+                ? 'bg-teal-600 text-white hover:bg-teal-700 hover:scale-110'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
           >
             {inCartQuantity > 0 ? (
@@ -137,22 +189,41 @@ export default function ProductCard({ product }: { product: Product }) {
             <span className="text-xs text-gray-500">({product.review_count})</span>
           </div>
 
+          {/* Variant Selector */}
+          {product.has_variants && product.variant_type && (
+            <VariantSelector
+              productId={product.id}
+              variantType={product.variant_type}
+              onSelect={handleVariantSelect}
+              selectedVariantId={selectedVariant?.id}
+              compact={true}
+            />
+          )}
+
           {/* Price */}
-          <div className="flex items-center gap-2">
-            <span className="text-xl font-bold text-gray-900">
-              S/ {finalPrice.toFixed(2)}
-            </span>
-            {product.original_price && product.original_price > finalPrice && (
-              <span className="text-sm text-gray-400 line-through">
-                S/ {product.original_price.toFixed(2)}
+          <div className="flex items-center gap-2 mt-3">
+            {product.has_variants && !selectedVariant ? (
+              <span className="text-lg font-bold text-gray-900">
+                Desde S/ {product.price.toFixed(2)}
               </span>
+            ) : (
+              <>
+                <span className="text-xl font-bold text-gray-900">
+                  S/ {finalPrice.toFixed(2)}
+                </span>
+                {product.original_price && product.original_price > finalPrice && (
+                  <span className="text-sm text-gray-400 line-through">
+                    S/ {product.original_price.toFixed(2)}
+                  </span>
+                )}
+              </>
             )}
           </div>
 
           {/* Stock Status */}
           {!isInStock && (
             <span className="inline-block mt-2 text-xs text-red-600 font-medium">
-              Agotado
+              {product.has_variants && selectedVariant ? `${selectedVariant.label} agotado` : 'Agotado'}
             </span>
           )}
         </div>

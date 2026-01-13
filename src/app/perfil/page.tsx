@@ -20,7 +20,7 @@ export default function PerfilPage() {
         const fetchOrderCount = async () => {
             if (user?.id) {
                 try {
-                    const res = await fetch(`/api/orders/user/${user.id}`);
+                    const res = await fetch(`/api/orders?userId=${user.id}`);
                     const data = await res.json();
                     setOrderCount(Array.isArray(data) ? data.length : 0);
                 } catch (error) {

@@ -33,17 +33,23 @@ function ProductsContent() {
   const router = useRouter();
 
   // URL params for initial state
-  const initialQuery = searchParams.get('q') || '';
-  const initialCategory = searchParams.get('categoria') || null;
+  const urlQuery = searchParams.get('q') || '';
+  const urlCategory = searchParams.get('categoria') || null;
 
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Client-side filter states
-  const [searchQuery, setSearchQuery] = useState(initialQuery);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(initialCategory);
+  const [searchQuery, setSearchQuery] = useState(urlQuery);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(urlCategory);
   const [viewMode, setViewMode] = useState<'grid' | 'grouped'>('grid');
+
+  // Sync state with URL params when they change (e.g., from navigation)
+  useEffect(() => {
+    setSearchQuery(urlQuery);
+    setSelectedCategory(urlCategory);
+  }, [urlQuery, urlCategory]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -75,10 +81,17 @@ function ProductsContent() {
       const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.short_description?.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchesCategory = selectedCategory
-        ? (product.category_name?.toLowerCase() === categories.find(c => c.slug === selectedCategory)?.name.toLowerCase() ||
-          product.category === selectedCategory) // Fallback
-        : true;
+      // Match by category slug - find the category and check if product belongs to it
+      let matchesCategory = true;
+      if (selectedCategory) {
+        const selectedCat = categories.find(c => c.slug === selectedCategory);
+        if (selectedCat) {
+          matchesCategory = product.category_name?.toLowerCase() === selectedCat.name.toLowerCase() ||
+            product.category?.toLowerCase() === selectedCat.name.toLowerCase();
+        } else {
+          matchesCategory = false;
+        }
+      }
 
       return matchesSearch && matchesCategory;
     });
