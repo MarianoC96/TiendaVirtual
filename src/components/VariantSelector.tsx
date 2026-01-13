@@ -49,9 +49,30 @@ export default function VariantSelector({
         const fetchVariants = async () => {
             try {
                 setLoading(true);
+                setError(null);
                 const res = await fetch(`/api/products/${productId}/variants`);
-                if (!res.ok) throw new Error('Error loading variants');
+
+                // Handle 404 gracefully - product might not have variants table yet
+                if (res.status === 404) {
+                    setVariants([]);
+                    return;
+                }
+
+                if (!res.ok) {
+                    // Don't throw error for non-critical failures
+                    console.warn('Could not fetch variants for product', productId);
+                    setVariants([]);
+                    return;
+                }
+
                 const data = await res.json();
+
+                // If response is an error object, treat as empty
+                if (data.error) {
+                    setVariants([]);
+                    return;
+                }
+
                 setVariants(data);
 
                 // Auto-select default variant if none selected
@@ -60,8 +81,9 @@ export default function VariantSelector({
                     onSelect(defaultVariant);
                 }
             } catch (err) {
-                setError('No se pudieron cargar las opciones');
-                console.error(err);
+                // Silently fail - variants are optional
+                console.warn('Variants fetch failed:', err);
+                setVariants([]);
             } finally {
                 setLoading(false);
             }
@@ -101,10 +123,10 @@ export default function VariantSelector({
                             }}
                             disabled={!variant.in_stock}
                             className={`px-2 py-0.5 text-xs rounded-md border transition-all cursor-pointer ${selectedVariantId === variant.id
-                                    ? 'bg-teal-600 text-white border-teal-600'
-                                    : variant.in_stock
-                                        ? 'bg-white text-gray-700 border-gray-300 hover:border-teal-400'
-                                        : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed line-through'
+                                ? 'bg-teal-600 text-white border-teal-600'
+                                : variant.in_stock
+                                    ? 'bg-white text-gray-700 border-gray-300 hover:border-teal-400'
+                                    : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed line-through'
                                 }`}
                         >
                             {variant.label}
@@ -136,10 +158,10 @@ export default function VariantSelector({
                         onClick={() => onSelect(variant)}
                         disabled={!variant.in_stock}
                         className={`relative px-4 py-2 rounded-xl border-2 transition-all cursor-pointer ${selectedVariantId === variant.id
-                                ? 'bg-teal-50 text-teal-700 border-teal-500 shadow-md shadow-teal-100'
-                                : variant.in_stock
-                                    ? 'bg-white text-gray-700 border-gray-200 hover:border-teal-300 hover:shadow-sm'
-                                    : 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
+                            ? 'bg-teal-50 text-teal-700 border-teal-500 shadow-md shadow-teal-100'
+                            : variant.in_stock
+                                ? 'bg-white text-gray-700 border-gray-200 hover:border-teal-300 hover:shadow-sm'
+                                : 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
                             }`}
                     >
                         <span className={`font-medium ${!variant.in_stock ? 'line-through' : ''}`}>

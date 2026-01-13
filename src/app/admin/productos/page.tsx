@@ -43,7 +43,7 @@ interface Category {
 function detectVariantType(name: string): VariantType | null {
   const n = name.toLowerCase();
   if (n.includes('polo') || n.includes('polos')) return 'size';
-  if (n.includes('taza') || n.includes('tazas') || n.includes('termo') || n.includes('termos')) return 'capacity';
+  if (n.includes('taza') || n.includes('tazas') || n.includes('tomatodo') || n.includes('tomatodos')) return 'capacity';
   if (n.includes('caja') || n.includes('cajas')) return 'dimensions';
   return null;
 }
