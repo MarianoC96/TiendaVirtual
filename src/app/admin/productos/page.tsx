@@ -886,7 +886,7 @@ export default function AdminProductsPage() {
                 </button>
                 <button
                   onClick={handleSave}
-                  disabled={saving || !editingProduct.name || !editingProduct.category_id || (detectedVariantType && variants.length === 0)}
+                  disabled={saving || !editingProduct.name || !editingProduct.category_id || (!!detectedVariantType && variants.length === 0)}
                   className="px-4 py-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
                 >
                   {saving ? (
