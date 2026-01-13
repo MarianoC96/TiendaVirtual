@@ -1,14 +1,6 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
-
-// Helper to detect variant type from product name
-function detectVariantType(name: string): 'size' | 'capacity' | 'dimensions' | null {
-  const n = name.toLowerCase();
-  if (n.includes('polo') || n.includes('polos')) return 'size';
-  if (n.includes('taza') || n.includes('tazas') || n.includes('tomatodo') || n.includes('tomatodos')) return 'capacity';
-  if (n.includes('caja') || n.includes('cajas')) return 'dimensions';
-  return null;
-}
+import { detectVariantType } from '@/lib/variants';
 
 interface VariantInput {
   id?: number;

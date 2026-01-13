@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import * as XLSX from 'xlsx';
+import useSWR from 'swr';
+import { fetcher, swrOptions } from '@/lib/fetcher';
 
 interface OrderItem {
   product: {
@@ -62,32 +64,27 @@ const STATUS_OPTIONS = [
 ];
 
 // Helper to check if order is delayed (more than 1 day old and not completed/cancelled)
-const isOrderDelayed = (order: Order): boolean => {
-  if (order.status === 'delivered' || order.status === 'cancelled') return false;
+function isOrderDelayed(order: Order): boolean {
+  if (order.status === 'delivered' || order.status === 'cancelled') {
+    return false;
+  }
 
   const orderDate = new Date(order.created_at);
-  const today = new Date();
+  const now = new Date();
+  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-  // Reset hours to compare only dates
-  orderDate.setHours(0, 0, 0, 0);
-  today.setHours(0, 0, 0, 0);
-
-  const diffTime = today.getTime() - orderDate.getTime();
-  const diffDays = diffTime / (1000 * 60 * 60 * 24);
-
-  return diffDays > 1;
-};
+  return orderDate < oneDayAgo;
+}
 
 // Generate years from 2026 onwards
-const generateYears = () => {
+function generateYears() {
   const currentYear = new Date().getFullYear();
-  const startYear = 2026;
-  const years: number[] = [];
-  for (let y = startYear; y <= Math.max(currentYear, startYear); y++) {
-    years.push(y);
+  const years = [];
+  for (let year = 2026; year <= currentYear + 1; year++) {
+    years.push(year);
   }
   return years;
-};
+}
 
 const MONTHS = [
   { value: 1, label: 'Enero' },
@@ -105,8 +102,13 @@ const MONTHS = [
 ];
 
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  // SWR for orders with caching
+  const { data: orders = [], isLoading: loading, mutate: mutateOrders } = useSWR<Order[]>(
+    '/api/admin/orders',
+    fetcher,
+    swrOptions
+  );
+
   const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
   const [viewingOrder, setViewingOrder] = useState<Order | null>(null);
 
@@ -116,22 +118,6 @@ export default function AdminOrdersPage() {
   const [exporting, setExporting] = useState(false);
 
   const years = useMemo(() => generateYears(), []);
-
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
-  const fetchOrders = async () => {
-    try {
-      const res = await fetch('/api/admin/orders');
-      const data = await res.json();
-      setOrders(data);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const updateOrderStatus = async (orderId: number, newStatus: string) => {
     setUpdatingStatus(orderId);
@@ -143,7 +129,7 @@ export default function AdminOrdersPage() {
       });
 
       if (res.ok) {
-        setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+        mutateOrders();
       }
     } catch (error) {
       console.error('Error updating order:', error);
@@ -198,7 +184,7 @@ export default function AdminOrdersPage() {
       });
 
       if (res.ok) {
-        setOrders(orders.filter(o => o.id !== orderToDelete));
+        mutateOrders();
         if (viewingOrder?.id === orderToDelete) {
           setViewingOrder(null);
         }

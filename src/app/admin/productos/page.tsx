@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-
-type VariantType = 'size' | 'capacity' | 'dimensions';
+import useSWR from 'swr';
+import { fetcher, swrOptions, swrOptionsLongCache } from '@/lib/fetcher';
+import { type VariantType, detectVariantType, getVariantTypeLabel, PREDEFINED_SIZES } from '@/lib/variants';
 
 interface ProductVariant {
   id?: number;
@@ -39,32 +40,14 @@ interface Category {
   name: string;
 }
 
-// Helper to detect variant type from product name
-function detectVariantType(name: string): VariantType | null {
-  const n = name.toLowerCase();
-  if (n.includes('polo') || n.includes('polos')) return 'size';
-  if (n.includes('taza') || n.includes('tazas') || n.includes('tomatodo') || n.includes('tomatodos')) return 'capacity';
-  if (n.includes('caja') || n.includes('cajas')) return 'dimensions';
-  return null;
-}
-
-// Predefined sizes for polo/clothing
-const PREDEFINED_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'];
-
-// Get variant type label
-function getVariantTypeLabel(type: VariantType | null): string {
-  switch (type) {
-    case 'size': return 'Tallas';
-    case 'capacity': return 'Capacidades (oz)';
-    case 'dimensions': return 'Dimensiones (Base x Altura)';
-    default: return 'Variantes';
-  }
+interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
 }
 
 export default function AdminProductsPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -76,9 +59,44 @@ export default function AdminProductsPage() {
   // Filter States
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
-
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
   const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 30;
+
+  // Define response type for SWR
+  interface ProductsResponse {
+    products: Product[];
+    pagination: PaginationInfo;
+  }
+
+  // SWR for products with caching
+  const productUrl = activeTab === 'history'
+    ? `/api/admin/products?deleted=true&page=${currentPage}&limit=${pageSize}`
+    : `/api/admin/products?page=${currentPage}&limit=${pageSize}`;
+
+  const { data: productsData, error: productsError, mutate: mutateProducts, isLoading: loadingProducts } = useSWR<ProductsResponse>(
+    productUrl,
+    fetcher,
+    swrOptions
+  );
+
+  // SWR for categories with long cache
+  const { data: categories = [] } = useSWR<Category[]>(
+    '/api/categories',
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 60000   // Cache for 1 minute
+    }
+  );
+
+  // Extract products and pagination from response
+  const products: Product[] = productsData?.products || [];
+  const pagination: PaginationInfo = productsData?.pagination || { page: 1, limit: pageSize, total: products.length, totalPages: 1 };
+  const loading = loadingProducts;
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -92,27 +110,6 @@ export default function AdminProductsPage() {
 
     return matchesSearch && matchesCategory;
   });
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const url = activeTab === 'history' ? '/api/admin/products?deleted=true' : '/api/admin/products';
-        const [productsRes, categoriesRes] = await Promise.all([
-          fetch(url),
-          fetch('/api/categories')
-        ]);
-        const productsData = await productsRes.json();
-        const categoriesData = await categoriesRes.json();
-        setProducts(productsData);
-        setCategories(categoriesData);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [activeTab]);
 
   // Detect variant type when product name changes
   useEffect(() => {
@@ -137,7 +134,8 @@ export default function AdminProductsPage() {
 
     try {
       await fetch(`/api/admin/products/${id}`, { method: 'DELETE' });
-      setProducts(products.filter(p => p.id !== id));
+      // Invalidate cache to refetch data
+      mutateProducts();
     } catch (error) {
       console.error('Error deleting product:', error);
     }
@@ -245,13 +243,8 @@ export default function AdminProductsPage() {
           category: updatedCategory?.name || 'Sin Categoría'
         };
 
-        if (isNew) {
-          setProducts([productWithCategory, ...products]);
-        } else {
-          setProducts(products.map(p =>
-            p.id === editingProduct.id ? productWithCategory : p
-          ));
-        }
+        // Invalidate cache to show updated data
+        mutateProducts();
 
         setShowModal(false);
         setEditingProduct(null);
@@ -601,6 +594,57 @@ export default function AdminProductsPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        {pagination.totalPages > 1 && (
+          <div className="flex items-center justify-between mt-6 px-4">
+            <p className="text-sm text-gray-600">
+              Mostrando {((pagination.page - 1) * pagination.limit) + 1} - {Math.min(pagination.page * pagination.limit, pagination.total)} de {pagination.total} productos
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-2 rounded-lg border border-gray-300 text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                ← Anterior
+              </button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (pagination.totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= pagination.totalPages - 2) {
+                    pageNum = pagination.totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`w-10 h-10 rounded-lg text-sm font-medium cursor-pointer ${currentPage === pageNum
+                        ? 'bg-teal-600 text-white'
+                        : 'border border-gray-300 hover:bg-gray-50'
+                        }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(pagination.totalPages, p + 1))}
+                disabled={currentPage === pagination.totalPages}
+                className="px-3 py-2 rounded-lg border border-gray-300 text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                Siguiente →
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Modal de Edición */}
         {showModal && editingProduct && (

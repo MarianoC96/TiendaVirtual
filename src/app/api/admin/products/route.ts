@@ -1,14 +1,6 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
-
-// Helper to detect variant type from product name
-function detectVariantType(name: string): 'size' | 'capacity' | 'dimensions' | null {
-    const n = name.toLowerCase();
-    if (n.includes('polo') || n.includes('polos')) return 'size';
-    if (n.includes('taza') || n.includes('tazas') || n.includes('tomatodo') || n.includes('tomatodos')) return 'capacity';
-    if (n.includes('caja') || n.includes('cajas')) return 'dimensions';
-    return null;
-}
+import { detectVariantType } from '@/lib/variants';
 
 interface VariantInput {
     label: string;
@@ -21,12 +13,18 @@ export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const deleted = searchParams.get('deleted') === 'true';
+        const page = parseInt(searchParams.get('page') || '1');
+        const limit = parseInt(searchParams.get('limit') || '50');
+        const includeVariants = searchParams.get('includeVariants') !== 'false'; // Default true
 
-        // Filter non-deleted products by default, or deleted if requested
+        const offset = (page - 1) * limit;
+
+        // Build base query with pagination
         let query = db
             .from('products')
-            .select('*')
-            .order(deleted ? 'deleted_at' : 'id', { ascending: false });
+            .select('*, categories(name)', { count: 'exact' })
+            .order(deleted ? 'deleted_at' : 'id', { ascending: false })
+            .range(offset, offset + limit - 1);
 
         if (deleted) {
             query = query.not('deleted_at', 'is', null);
@@ -34,58 +32,85 @@ export async function GET(request: Request) {
             query = query.is('deleted_at', null);
         }
 
-        const { data: products, error } = await query;
+        const { data: products, error, count } = await query;
 
         if (error) throw error;
 
-        // Enrich with creator, deleter details, and variants
-        const enrichedProducts = await Promise.all(
-            (products || []).map(async (product) => {
-                let creator_name = null;
-                let deleter_name = null;
+        if (!products || products.length === 0) {
+            return NextResponse.json({
+                products: [],
+                pagination: { page, limit, total: 0, totalPages: 0 }
+            });
+        }
 
-                if (product.created_by) {
-                    const { data: creator } = await db
-                        .from('users')
-                        .select('name')
-                        .eq('id', product.created_by)
-                        .single();
-                    creator_name = creator?.name;
-                }
+        // Batch fetch user names (avoid N+1 queries)
+        const userIds = new Set<number>();
+        products.forEach(p => {
+            if (p.created_by) userIds.add(p.created_by);
+            if (deleted && p.deleted_by && !isNaN(parseInt(p.deleted_by))) {
+                userIds.add(parseInt(p.deleted_by));
+            }
+        });
 
-                if (deleted && product.deleted_by) {
-                    const deleterId = parseInt(product.deleted_by);
-                    if (!isNaN(deleterId)) {
-                        const { data: deleter } = await db.from('users').select('name').eq('id', deleterId).single();
-                        deleter_name = deleter?.name;
-                    } else {
-                        deleter_name = product.deleted_by;
-                    }
-                }
+        let usersMap: Record<number, string> = {};
+        if (userIds.size > 0) {
+            const { data: users } = await db
+                .from('users')
+                .select('id, name')
+                .in('id', Array.from(userIds));
 
-                // Get category name if not present
-                let category_name = product.category;
-                if (!category_name && product.category_id) {
-                    const { data: cat } = await db.from('categories').select('name').eq('id', product.category_id).single();
-                    category_name = cat?.name;
-                }
+            users?.forEach(u => { usersMap[u.id] = u.name; });
+        }
 
-                // Get variants if product has them
-                let variants = [];
-                if (product.has_variants) {
-                    const { data: variantsData } = await db
-                        .from('product_variants')
-                        .select('*')
-                        .eq('product_id', product.id)
-                        .order('id', { ascending: true });
-                    variants = variantsData || [];
-                }
+        // Batch fetch variants for products that have them (avoid N+1 queries)
+        let variantsMap: Record<number, any[]> = {};
+        if (includeVariants) {
+            const productIdsWithVariants = products
+                .filter(p => p.has_variants)
+                .map(p => p.id);
 
-                return { ...product, creator_name, deleter_name, category: category_name, variants };
-            })
-        );
+            if (productIdsWithVariants.length > 0) {
+                const { data: allVariants } = await db
+                    .from('product_variants')
+                    .select('*')
+                    .in('product_id', productIdsWithVariants)
+                    .order('id', { ascending: true });
 
-        return NextResponse.json(enrichedProducts);
+                allVariants?.forEach(v => {
+                    if (!variantsMap[v.product_id]) variantsMap[v.product_id] = [];
+                    variantsMap[v.product_id].push(v);
+                });
+            }
+        }
+
+        // Enrich products with cached data
+        const enrichedProducts = products.map(product => {
+            const category = product.categories?.name || product.category;
+            const creator_name = product.created_by ? usersMap[product.created_by] || null : null;
+            let deleter_name = null;
+
+            if (deleted && product.deleted_by) {
+                const deleterId = parseInt(product.deleted_by);
+                deleter_name = !isNaN(deleterId) ? usersMap[deleterId] : product.deleted_by;
+            }
+
+            const variants = product.has_variants ? (variantsMap[product.id] || []) : [];
+
+            // Remove nested categories object
+            const { categories, ...rest } = product;
+
+            return { ...rest, category, creator_name, deleter_name, variants };
+        });
+
+        return NextResponse.json({
+            products: enrichedProducts,
+            pagination: {
+                page,
+                limit,
+                total: count || 0,
+                totalPages: Math.ceil((count || 0) / limit)
+            }
+        });
     } catch (error) {
         console.error('Error fetching products:', error);
         return NextResponse.json(
