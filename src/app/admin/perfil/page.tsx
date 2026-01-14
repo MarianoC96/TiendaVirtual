@@ -9,7 +9,7 @@ interface UserStats {
 }
 
 export default function AdminPerfilPage() {
-    const { user, isAdmin, isWorker } = useAuth();
+    const { user, isAdmin, isWorker, isAssistant } = useAuth();
     const [stats, setStats] = useState<UserStats>({ totalOrders: 0, totalSpent: 0 });
 
     useEffect(() => {
@@ -27,12 +27,14 @@ export default function AdminPerfilPage() {
 
     const getRoleLabel = () => {
         if (isAdmin) return 'Administrador';
+        if (isAssistant) return 'Asistente';
         if (isWorker) return 'Staff';
         return 'Usuario';
     };
 
     const getRoleDescription = () => {
         if (isAdmin) return 'Acceso completo al sistema de administración';
+        if (isAssistant) return 'Acceso limitado para asistencia al equipo';
         if (isWorker) return 'Acceso limitado según permisos asignados';
         return 'Cuenta de usuario estándar';
     };

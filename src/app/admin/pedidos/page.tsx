@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import useSWR from 'swr';
 import { fetcher, swrOptions } from '@/lib/fetcher';
+import { getPeruDate, getPeruYear, getPeruMonth, formatPeruDateTime, formatPeruDateShort, isOrderDelayedPeru, PERU_TIMEZONE } from '@/lib/timezone';
 
 interface OrderItem {
   product: {
@@ -52,6 +53,7 @@ interface Order {
   coupon_code: string | null;
   discount_info: DiscountInfo | string | null;
   payment_method: string | null;
+  contact_number: string | null;
   created_at: string;
 }
 
@@ -68,17 +70,12 @@ function isOrderDelayed(order: Order): boolean {
   if (order.status === 'delivered' || order.status === 'cancelled') {
     return false;
   }
-
-  const orderDate = new Date(order.created_at);
-  const now = new Date();
-  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-
-  return orderDate < oneDayAgo;
+  return isOrderDelayedPeru(order.created_at);
 }
 
 // Generate years from 2026 onwards
 function generateYears() {
-  const currentYear = new Date().getFullYear();
+  const currentYear = getPeruYear();
   const years = [];
   for (let year = 2026; year <= currentYear + 1; year++) {
     years.push(year);
@@ -112,12 +109,60 @@ export default function AdminOrdersPage() {
   const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
   const [viewingOrder, setViewingOrder] = useState<Order | null>(null);
 
+  // Search and filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterDateFrom, setFilterDateFrom] = useState('');
+  const [filterDateTo, setFilterDateTo] = useState('');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+
   // Export filters
-  const [exportMonth, setExportMonth] = useState(new Date().getMonth() + 1);
-  const [exportYear, setExportYear] = useState(new Date().getFullYear());
+  const [exportMonth, setExportMonth] = useState(getPeruMonth());
+  const [exportYear, setExportYear] = useState(getPeruYear());
   const [exporting, setExporting] = useState(false);
 
   const years = useMemo(() => generateYears(), []);
+
+  // Filtered orders based on search and date filters
+  const filteredOrders = useMemo(() => {
+    return orders.filter(order => {
+      // Search filter (order code, client name, email)
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesCode = order.order_code?.toLowerCase().includes(query);
+        const matchesName = order.guest_name?.toLowerCase().includes(query);
+        const matchesEmail = order.guest_email?.toLowerCase().includes(query);
+        const matchesId = order.id.toString().includes(query);
+        if (!matchesCode && !matchesName && !matchesEmail && !matchesId) return false;
+      }
+
+      // Status filter
+      if (filterStatus !== 'all' && order.status !== filterStatus) return false;
+
+      // Date range filter
+      const orderDate = new Date(order.created_at);
+      if (filterDateFrom) {
+        // Parse date in Peru timezone
+        const fromDate = new Date(filterDateFrom + 'T00:00:00-05:00');
+        if (orderDate < fromDate) return false;
+      }
+      if (filterDateTo) {
+        // Parse date in Peru timezone (end of day)
+        const toDate = new Date(filterDateTo + 'T23:59:59-05:00');
+        if (orderDate > toDate) return false;
+      }
+
+      return true;
+    });
+  }, [orders, searchQuery, filterStatus, filterDateFrom, filterDateTo]);
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setFilterDateFrom('');
+    setFilterDateTo('');
+    setFilterStatus('all');
+  };
+
+  const hasActiveFilters = searchQuery || filterDateFrom || filterDateTo || filterStatus !== 'all';
 
   const updateOrderStatus = async (orderId: number, newStatus: string) => {
     setUpdatingStatus(orderId);
@@ -229,7 +274,7 @@ export default function AdminOrdersPage() {
 
         return {
           'ID': order.id,
-          'Fecha': new Date(order.created_at).toLocaleDateString('es-PE'),
+          'Fecha': formatPeruDateShort(order.created_at),
           'Cliente': order.guest_name || `Usuario #${order.user_id}`,
           'Email': order.guest_email || '',
           'Teléfono': order.guest_phone || '',
@@ -291,7 +336,12 @@ export default function AdminOrdersPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Pedidos</h1>
-          <p className="text-sm text-gray-500 mt-1">{orders.length} pedido(s) total</p>
+          <p className="text-sm text-gray-500 mt-1">
+            {hasActiveFilters
+              ? `${filteredOrders.length} de ${orders.length} pedido(s)`
+              : `${orders.length} pedido(s) total`
+            }
+          </p>
         </div>
 
         {/* Export Controls */}
@@ -332,11 +382,90 @@ export default function AdminOrdersPage() {
         </div>
       </div>
 
-      {orders.length === 0 ? (
+      {/* Search and Filters */}
+      <div className="bg-white rounded-xl shadow-sm border p-4 mb-6">
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* Search Input */}
+          <div className="flex-1 relative">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Buscar por código (MAE2026...), cliente o email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all outline-none"
+            />
+          </div>
+
+          {/* Status Filter */}
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent cursor-pointer"
+          >
+            <option value="all">Todos los estados</option>
+            {STATUS_OPTIONS.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+
+          {/* Date Filters */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500">Desde:</span>
+            <input
+              type="date"
+              value={filterDateFrom}
+              onChange={(e) => setFilterDateFrom(e.target.value)}
+              className="px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent cursor-pointer"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500">Hasta:</span>
+            <input
+              type="date"
+              value={filterDateTo}
+              onChange={(e) => setFilterDateTo(e.target.value)}
+              className="px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent cursor-pointer"
+            />
+          </div>
+
+          {/* Clear Filters */}
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              className="px-4 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors flex items-center gap-2 cursor-pointer"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Limpiar
+            </button>
+          )}
+        </div>
+      </div>
+
+      {filteredOrders.length === 0 ? (
         <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
-          <span className="text-4xl mb-4 block">📦</span>
-          <h2 className="text-xl font-semibold text-gray-700 mb-2">No hay pedidos aún</h2>
-          <p className="text-gray-500">Los pedidos aparecerán aquí cuando los clientes compren.</p>
+          <span className="text-4xl mb-4 block">{hasActiveFilters ? '🔍' : '📦'}</span>
+          <h2 className="text-xl font-semibold text-gray-700 mb-2">
+            {hasActiveFilters ? 'No se encontraron pedidos' : 'No hay pedidos aún'}
+          </h2>
+          <p className="text-gray-500">
+            {hasActiveFilters
+              ? 'Intenta ajustar los filtros de búsqueda'
+              : 'Los pedidos aparecerán aquí cuando los clientes compren.'
+            }
+          </p>
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              className="mt-4 px-4 py-2 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors cursor-pointer"
+            >
+              Limpiar filtros
+            </button>
+          )}
         </div>
       ) : (
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
@@ -353,7 +482,7 @@ export default function AdminOrdersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {orders.map((order) => {
+              {filteredOrders.map((order) => {
                 const delayed = isOrderDelayed(order);
                 const items = parseItems(order.items_json);
                 const statusOption = getStatusOption(order.status);
@@ -381,11 +510,7 @@ export default function AdminOrdersPage() {
                       <p className="text-sm text-gray-500">{order.guest_email || ''}</p>
                     </td>
                     <td className="px-4 py-4 text-gray-600">
-                      {new Date(order.created_at).toLocaleDateString('es-PE', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
-                      })}
+                      {formatPeruDateShort(order.created_at)}
                     </td>
                     <td className="px-4 py-4">
                       <span className="font-bold text-gray-900">S/ {order.total.toFixed(2)}</span>
@@ -489,17 +614,34 @@ export default function AdminOrdersPage() {
                   </div>
                 </div>
 
-                {/* Envío */}
+                {/* Envío y Pago */}
                 <div className="bg-gray-50 rounded-xl p-4">
                   <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <span>📍</span> Envío
+                    <span>📍</span> Envío y Pago
                   </h4>
-                  <p className="text-sm text-gray-600">
-                    {viewingOrder.shipping_address || 'No especificada'}
-                  </p>
-                  <p className="text-sm text-gray-500 mt-2">
-                    Método: {viewingOrder.payment_method || 'N/A'}
-                  </p>
+                  <div className="space-y-2 text-sm">
+                    <p className="text-gray-600">
+                      <span className="text-gray-500">Dirección:</span> {viewingOrder.shipping_address || 'No especificada'}
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <span className="text-gray-500">Pago:</span>
+                      {viewingOrder.payment_method === 'yape' && (
+                        <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">💜 Yape</span>
+                      )}
+                      {viewingOrder.payment_method === 'plin' && (
+                        <span className="px-2 py-1 bg-cyan-100 text-cyan-700 rounded-full text-xs font-medium">💙 Plin</span>
+                      )}
+                      {viewingOrder.payment_method === 'transferencia' && (
+                        <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">🏦 Transferencia</span>
+                      )}
+                      {!viewingOrder.payment_method && <span className="text-gray-500">N/A</span>}
+                    </p>
+                    {viewingOrder.contact_number && (
+                      <p>
+                        <span className="text-gray-500">Contacto:</span> {viewingOrder.contact_number}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Resumen */}
@@ -628,7 +770,7 @@ export default function AdminOrdersPage() {
               {/* Fecha y Estado */}
               <div className="flex items-center justify-between pt-4 border-t">
                 <div className="text-sm text-gray-500">
-                  Creado: {new Date(viewingOrder.created_at).toLocaleString('es-PE')}
+                  Creado: {formatPeruDateTime(viewingOrder.created_at)}
                 </div>
                 <select
                   value={viewingOrder.status}

@@ -53,7 +53,8 @@ export async function DELETE(
       .update({
         active: false, // Also deactivate it
         deleted_by: deletedBy, // Changed from deactivated_by to deleted_by for proper soft delete
-        deleted_at: new Date().toISOString() // Use deleted_at for hard filtering
+        deleted_at: new Date().toISOString(), // Use deleted_at for hard filtering
+        deletion_reason: 'manual' // Track that it was manually deleted by admin
       })
       .eq('id', parseInt(id));
 

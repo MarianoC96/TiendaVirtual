@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import Link from 'next/link';
+import { getPeruYear, formatPeruDateTime, formatPeruDateShort, PERU_TIMEZONE } from '@/lib/timezone';
 
 interface OrderItem {
     product: {
@@ -31,6 +32,7 @@ interface Order {
     status: string;
     coupon_code: string | null;
     payment_method: string | null;
+    contact_number: string | null;
     created_at: string;
     deleted_at: string | null;
     deleted_by: string | null;
@@ -68,13 +70,13 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 export default function HistorialPedidosPage() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [selectedYear, setSelectedYear] = useState(getPeruYear());
     const [selectedMonth, setSelectedMonth] = useState(0);
     const [exporting, setExporting] = useState(false);
     const [viewingOrder, setViewingOrder] = useState<Order | null>(null);
 
     // Generate year options (from 2026 to current year + 1)
-    const currentYear = new Date().getFullYear();
+    const currentYear = getPeruYear();
     const startYear = 2026;
     const yearOptions = Array.from({ length: Math.max(currentYear - startYear + 2, 1) }, (_, i) => startYear + i);
 
@@ -141,7 +143,7 @@ export default function HistorialPedidosPage() {
         const productsText = items.map(i => `${i.product.name} x${i.quantity}`).join('; ');
         return {
             'ID': order.id,
-            'Fecha': new Date(order.created_at).toLocaleDateString('es-PE'),
+            'Fecha': formatPeruDateShort(order.created_at),
             'Cliente': order.guest_name || `Usuario #${order.user_id}`,
             'Email': order.guest_email || '',
             'Teléfono': order.guest_phone || '',
@@ -386,7 +388,7 @@ export default function HistorialPedidosPage() {
                                 >
                                     <td className="px-4 py-4 font-mono text-sm text-gray-600">#{order.id}</td>
                                     <td className="px-4 py-4 text-gray-900">
-                                        {new Date(order.created_at).toLocaleDateString('es-PE')}
+                                        {formatPeruDateShort(order.created_at)}
                                     </td>
                                     <td className="px-4 py-4 text-gray-900">
                                         {order.guest_name || `Usuario #${order.user_id}`}
@@ -447,7 +449,7 @@ export default function HistorialPedidosPage() {
                                 <div>
                                     <h2 className="text-2xl font-bold">Pedido #{viewingOrder.id}</h2>
                                     <p className="text-teal-100">
-                                        {new Date(viewingOrder.created_at).toLocaleString('es-PE')}
+                                        {formatPeruDateTime(viewingOrder.created_at)}
                                     </p>
                                 </div>
                                 <button
@@ -471,7 +473,7 @@ export default function HistorialPedidosPage() {
                                     </h4>
                                     <div className="text-sm text-red-700 space-y-1">
                                         <p><strong>Eliminado por:</strong> {getDeletedByName(viewingOrder.deleted_by)}</p>
-                                        <p><strong>Fecha:</strong> {viewingOrder.deleted_at ? new Date(viewingOrder.deleted_at).toLocaleString('es-PE') : 'N/A'}</p>
+                                        <p><strong>Fecha:</strong> {viewingOrder.deleted_at ? formatPeruDateTime(viewingOrder.deleted_at) : 'N/A'}</p>
                                         {viewingOrder.deletion_reason && (
                                             <p><strong>Motivo:</strong> {viewingOrder.deletion_reason}</p>
                                         )}
@@ -510,7 +512,25 @@ export default function HistorialPedidosPage() {
                                     <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
                                         <span>💳</span> Pago
                                     </h4>
-                                    <p className="text-gray-700">{viewingOrder.payment_method || 'WhatsApp'}</p>
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2">
+                                            {viewingOrder.payment_method === 'yape' && (
+                                                <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">💜 Yape</span>
+                                            )}
+                                            {viewingOrder.payment_method === 'plin' && (
+                                                <span className="px-2 py-1 bg-cyan-100 text-cyan-700 rounded-full text-xs font-medium">💙 Plin</span>
+                                            )}
+                                            {viewingOrder.payment_method === 'transferencia' && (
+                                                <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">🏦 Transferencia</span>
+                                            )}
+                                            {!viewingOrder.payment_method && <span className="text-gray-500">WhatsApp</span>}
+                                        </div>
+                                        {viewingOrder.contact_number && (
+                                            <p className="text-sm text-gray-600">
+                                                <span className="text-gray-500">Contacto:</span> {viewingOrder.contact_number}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="bg-teal-50 rounded-xl p-4">
                                     <h4 className="font-semibold text-gray-900 mb-2">💰 Resumen</h4>

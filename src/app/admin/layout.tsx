@@ -19,7 +19,7 @@ const MENU_ITEMS = [
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { user, isAdmin, isWorker, hasPermission, loading, logout } = useAuth();
+  const { user, isAdmin, isWorker, isAssistant, hasPermission, loading, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -27,10 +27,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // Verificar acceso al panel admin
   useEffect(() => {
-    if (!loading && !isAdmin && !isWorker) {
+    if (!loading && !isAdmin && !isWorker && !isAssistant) {
       router.push('/login');
     }
-  }, [loading, isAdmin, isWorker, router]);
+  }, [loading, isAdmin, isWorker, isAssistant, router]);
 
   // Cerrar sidebar al cambiar de ruta
   useEffect(() => {
@@ -39,21 +39,35 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // Verificar acceso a la ruta actual
   useEffect(() => {
-    if (!loading && (isAdmin || isWorker)) {
+    if (!loading && (isAdmin || isWorker || isAssistant)) {
       const currentItem = MENU_ITEMS.find(item =>
         pathname === item.href ||
         (item.href !== '/admin' && pathname.startsWith(item.href))
       );
 
+      // Get the first allowed page for non-admin users
+      const getFirstAllowedPage = () => {
+        for (const item of MENU_ITEMS) {
+          if (item.adminOnly && !isAdmin) continue;
+          if (hasPermission(item.permission)) {
+            return item.href;
+          }
+        }
+        return '/admin/perfil'; // Fallback to profile
+      };
+
       if (currentItem) {
         if (currentItem.adminOnly && !isAdmin) {
-          router.push('/admin');
+          router.push(getFirstAllowedPage());
         } else if (!hasPermission(currentItem.permission)) {
-          router.push('/admin');
+          router.push(getFirstAllowedPage());
         }
+      } else if (pathname === '/admin' && !hasPermission('dashboard')) {
+        // If on dashboard but no permission, redirect to first allowed page
+        router.push(getFirstAllowedPage());
       }
     }
-  }, [loading, isAdmin, isWorker, pathname, hasPermission, router]);
+  }, [loading, isAdmin, isWorker, isAssistant, pathname, hasPermission, router]);
 
   if (loading) {
     return (
@@ -63,7 +77,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (!isAdmin && !isWorker) {
+  if (!isAdmin && !isWorker && !isAssistant) {
     return null;
   }
 
@@ -91,7 +105,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Link href="/admin" className="flex items-center gap-2">
               <img src="/logo.png" alt="MAE Party & Print" className="h-20 lg:h-28 w-auto" />
               <span className="text-xs bg-teal-50 text-teal-600 px-2 py-1 rounded-full font-medium hidden sm:inline">
-                {isAdmin ? 'Admin' : 'Staff'}
+                {isAdmin ? 'Admin' : isAssistant ? 'Asistente' : 'Staff'}
               </span>
             </Link>
           </div>
@@ -113,7 +127,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </div>
                 <div className="hidden md:block text-left">
                   <p className="text-sm font-medium text-gray-900">{user?.name}</p>
-                  <p className="text-xs text-gray-500">{isAdmin ? 'Administrador' : 'Staff'}</p>
+                  <p className="text-xs text-gray-500">{isAdmin ? 'Administrador' : isAssistant ? 'Asistente' : 'Staff'}</p>
                 </div>
                 <svg className={`w-4 h-4 text-gray-400 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />

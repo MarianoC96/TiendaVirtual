@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { getPeruMonthYearISO, formatPeruDateTime, PERU_TIMEZONE } from '@/lib/timezone';
 
 interface Discount {
   id: number;
@@ -20,6 +21,7 @@ interface Discount {
   deleted_at?: string;
   deleted_by?: string;
   deleter_name?: string;
+  deletion_reason?: string;
 }
 
 interface Product {
@@ -42,7 +44,7 @@ export default function AdminDiscountsPage() {
   const [error, setError] = useState('');
 
   const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
-  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
+  const [selectedMonth, setSelectedMonth] = useState(getPeruMonthYearISO()); // YYYY-MM
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -491,6 +493,7 @@ export default function AdminDiscountsPage() {
                 </>
               ) : (
                 <>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Motivo</th>
                   <th className="px-6 py-4 text-center text-sm font-medium text-gray-500">Uso Total</th>
                   <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Creado Por</th>
                   <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Eliminado Por</th>
@@ -582,6 +585,17 @@ export default function AdminDiscountsPage() {
                     </>
                   ) : (
                     <>
+                      <td className="px-6 py-4">
+                        {discount.deletion_reason === 'expired' ? (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                            ⏰ Expirado
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                            🗑️ Eliminado manualmente
+                          </span>
+                        )}
+                      </td>
                       <td className="px-6 py-4 text-center">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                           {discount.usage_count || 0}
@@ -591,7 +605,11 @@ export default function AdminDiscountsPage() {
                         {discount.creator_name || <span className="text-gray-400">Sistema</span>}
                       </td>
                       <td className="px-6 py-4 text-gray-500 text-sm">
-                        {discount.deleter_name || <span className="text-gray-400">Desconocido</span>}
+                        {discount.deletion_reason === 'expired' ? (
+                          <span className="text-gray-400">Sistema</span>
+                        ) : (
+                          discount.deleter_name || <span className="text-gray-400">Desconocido</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-gray-500 text-sm">
                         {discount.deleted_at ? new Date(discount.deleted_at).toLocaleString() : '-'}

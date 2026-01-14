@@ -8,7 +8,7 @@ interface User {
     id: number;
     name: string;
     email: string;
-    role: 'user' | 'worker' | 'admin';
+    role: 'user' | 'worker' | 'assistant' | 'admin';
     active: boolean;
     created_at: string;
 }
@@ -126,6 +126,8 @@ export default function UsuariosPage() {
                 return <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-700 rounded-full">Administrador</span>;
             case 'worker':
                 return <span className="px-2 py-1 text-xs font-medium bg-teal-100 text-teal-700 rounded-full">Trabajador</span>;
+            case 'assistant':
+                return <span className="px-2 py-1 text-xs font-medium bg-cyan-100 text-cyan-700 rounded-full">Asistente</span>;
             default:
                 return <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full">Cliente</span>;
         }
@@ -180,6 +182,7 @@ export default function UsuariosPage() {
                         <option value="all">Todos los roles</option>
                         <option value="admin">Administradores</option>
                         <option value="worker">Trabajador</option>
+                        <option value="assistant">Asistente</option>
                         <option value="user">Clientes</option>
                     </select>
 
@@ -311,6 +314,7 @@ export default function UsuariosPage() {
                                 >
                                     <option value="user">Cliente</option>
                                     <option value="worker">Trabajador</option>
+                                    <option value="assistant">Asistente</option>
                                     <option value="admin">Administrador</option>
                                 </select>
                             </div>

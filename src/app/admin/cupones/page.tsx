@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { getPeruMonthYearISO, formatPeruDateTime, isExpiredPeru, PERU_TIMEZONE } from '@/lib/timezone';
 
 interface Coupon {
   id: number;
@@ -25,6 +26,7 @@ interface Coupon {
   deactivator_name?: string;
   deleter_name?: string;
   target_name?: string;
+  deletion_reason?: string;
 }
 
 interface Product {
@@ -47,7 +49,7 @@ export default function AdminCouponsPage() {
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
+  const [selectedMonth, setSelectedMonth] = useState(getPeruMonthYearISO()); // YYYY-MM
   const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
 
   const filteredCoupons = coupons.filter(coupon => {
@@ -512,6 +514,7 @@ export default function AdminCouponsPage() {
                 </>
               ) : (
                 <>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Motivo</th>
                   <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Creado Por</th>
                   <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Eliminado Por</th>
                   <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Fecha Eliminación</th>
@@ -614,11 +617,26 @@ export default function AdminCouponsPage() {
                     </>
                   ) : (
                     <>
+                      <td className="px-6 py-4">
+                        {coupon.deletion_reason === 'expired' ? (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                            ⏰ Expirado
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                            🗑️ Eliminado manualmente
+                          </span>
+                        )}
+                      </td>
                       <td className="px-6 py-4 text-gray-500 text-sm">
                         {coupon.creator_name || <span className="text-gray-400">Sistema</span>}
                       </td>
                       <td className="px-6 py-4 text-gray-500 text-sm">
-                        {coupon.deleter_name || <span className="text-gray-400">Desconocido</span>}
+                        {coupon.deletion_reason === 'expired' ? (
+                          <span className="text-gray-400">Sistema</span>
+                        ) : (
+                          coupon.deleter_name || <span className="text-gray-400">Desconocido</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-gray-500 text-sm">
                         {coupon.deleted_at ? new Date(coupon.deleted_at).toLocaleString() : '-'}

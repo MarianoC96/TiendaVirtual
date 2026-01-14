@@ -6,7 +6,7 @@ interface User {
   id: number;
   email: string;
   name: string;
-  role: 'admin' | 'worker' | 'user' | 'client';
+  role: 'admin' | 'worker' | 'assistant' | 'user' | 'client';
 }
 
 interface AuthContextType {
@@ -14,6 +14,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   isWorker: boolean;
+  isAssistant: boolean;
   permissions: string[];
   hasPermission: (permission: string) => boolean;
   loading: boolean;
@@ -32,6 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isAdmin = user?.role === 'admin';
   const isWorker = user?.role === 'worker';
+  const isAssistant = user?.role === 'assistant';
 
   // Fetch permissions for the current user
   const refreshPermissions = async () => {
@@ -73,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Refresh permissions when user changes
   useEffect(() => {
-    if (user && (user.role === 'admin' || user.role === 'worker')) {
+    if (user && (user.role === 'admin' || user.role === 'worker' || user.role === 'assistant')) {
       refreshPermissions();
     } else {
       setPermissions([]);
@@ -131,6 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: !!user,
       isAdmin,
       isWorker,
+      isAssistant,
       permissions,
       hasPermission,
       loading,

@@ -57,7 +57,8 @@ export async function DELETE(
       .update({
         active: false,
         deleted_by: deletedBy,
-        deleted_at: new Date().toISOString()
+        deleted_at: new Date().toISOString(),
+        deletion_reason: 'manual' // Track that it was manually deleted by admin
       })
       .eq('id', id);
 

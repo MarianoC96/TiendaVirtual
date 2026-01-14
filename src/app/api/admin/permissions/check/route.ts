@@ -37,15 +37,15 @@ export async function GET(request: Request) {
             });
         }
 
-        // Si es trabajador, obtener sus permisos específicos
-        if (user.role === 'worker') {
+        // Si es trabajador o asistente, obtener sus permisos específicos
+        if (user.role === 'worker' || user.role === 'assistant') {
             const { data: permissions } = await db
                 .from('worker_permissions')
                 .select('permission_key')
                 .eq('user_id', userId);
 
             return NextResponse.json({
-                role: 'worker',
+                role: user.role,
                 permissions: (permissions || []).map(p => p.permission_key),
                 hasFullAccess: false
             });

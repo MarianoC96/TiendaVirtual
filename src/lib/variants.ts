@@ -6,13 +6,13 @@ export type VariantType = 'size' | 'capacity' | 'dimensions';
  * Detect variant type based on product name keywords
  * - size: polo, polos
  * - capacity: taza, tazas, tomatodo, tomatodos
- * - dimensions: caja, cajas
+ * - dimensions: caja, cajas, mousepad
  */
 export function detectVariantType(name: string): VariantType | null {
     const n = name.toLowerCase();
     if (n.includes('polo') || n.includes('polos')) return 'size';
     if (n.includes('taza') || n.includes('tazas') || n.includes('tomatodo') || n.includes('tomatodos')) return 'capacity';
-    if (n.includes('caja') || n.includes('cajas')) return 'dimensions';
+    if (n.includes('caja') || n.includes('cajas') || n.includes('mousepad')) return 'dimensions';
     return null;
 }
 

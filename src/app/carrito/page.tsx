@@ -41,6 +41,24 @@ export default function CartPage() {
   const [guestPhone, setGuestPhone] = useState('');
   const [shippingAddress, setShippingAddress] = useState('');
 
+  // Payment method and contact
+  const [paymentMethod, setPaymentMethod] = useState<'yape' | 'plin' | 'transferencia'>('yape');
+  const [contactNumber, setContactNumber] = useState('');
+  const [contactNumberError, setContactNumberError] = useState('');
+
+  // Validate contact number (optional but if provided, must be 9+ digits, numbers only)
+  const handleContactNumberChange = (value: string) => {
+    // Only allow numbers
+    const numbersOnly = value.replace(/[^0-9]/g, '');
+    setContactNumber(numbersOnly);
+
+    if (numbersOnly && numbersOnly.length < 9) {
+      setContactNumberError('Mínimo 9 dígitos');
+    } else {
+      setContactNumberError('');
+    }
+  };
+
   // Fetch cart value discount
   useEffect(() => {
     const fetchCartDiscount = async () => {
@@ -178,13 +196,14 @@ export default function CartPage() {
       if (productDiscounts.length > 0) discountInfo.product_discounts = productDiscounts;
       if (categoryDiscounts.length > 0) discountInfo.category_discounts = categoryDiscounts;
 
-      // First, create the order in the database
       const orderData = {
         userId: isAuthenticated && user ? user.id : null,
         guestName: !isAuthenticated ? guestName : (user?.name || null),
         guestEmail: !isAuthenticated ? guestEmail : (user?.email || null),
         guestPhone: !isAuthenticated ? guestPhone : null,
         shippingAddress: shippingAddress,
+        paymentMethod: paymentMethod,
+        contactNumber: contactNumber || null,
         items: items,
         subtotal: total,
         discount: totalDiscount,
@@ -200,10 +219,20 @@ export default function CartPage() {
       });
 
       if (!res.ok) {
-        throw new Error('Failed to create order');
+        const text = await res.text();
+        console.error(`API Error (${res.status}):`, text);
+        try {
+          const json = JSON.parse(text);
+          console.error('API Error JSON:', json);
+          throw new Error(json.details || json.error || JSON.stringify(json));
+        } catch (e) {
+          throw new Error(`API Error ${res.status}: ${text}`);
+        }
       }
 
-      const { orderId, orderCode } = await res.json();
+      const responseData = await res.json();
+
+      const { orderId, orderCode } = responseData;
 
       // Now build and send WhatsApp message
       const storePhoneNumber = "51999888777";
@@ -243,18 +272,33 @@ export default function CartPage() {
 
       message += `\n\n✅ *TOTAL: S/ ${finalTotal.toFixed(2)}*`;
 
+      // Payment method
+      const paymentLabels = { yape: 'Yape', plin: 'Plin', transferencia: 'Transferencia Bancaria' };
+      message += `\n\n💳 *Método de Pago:* ${paymentLabels[paymentMethod]}`;
+
+      // Contact number if provided
+      if (contactNumber) {
+        message += `\n📞 *Número de Contacto:* ${contactNumber}`;
+      }
+
+      // Shipping address
+      message += `\n📍 *Dirección de Envío:* ${shippingAddress}`;
+
       const whatsappUrl = `https://wa.me/${storePhoneNumber}?text=${encodeURIComponent(message)}`;
       window.open(whatsappUrl, '_blank');
       clearCart();
     } catch (error) {
       console.error('Error creating order:', error);
-      alert('Error al crear el pedido. Por favor intenta de nuevo.');
+      const errorMsg = error instanceof Error ? error.message : 'Error desconocido';
+      alert(`Error al crear el pedido: ${errorMsg}`);
     } finally {
       setOrderLoading(false);
     }
   };
 
-  const canCheckout = shippingAddress && (isAuthenticated || (guestName && guestEmail && guestPhone));
+  // Validate checkout: payment method is always selected, contact number if provided must be valid
+  const isContactNumberValid = !contactNumber || (contactNumber.length >= 9 && !contactNumberError);
+  const canCheckout = shippingAddress && isContactNumberValid && (isAuthenticated || (guestName && guestEmail && guestPhone));
 
   if (items.length === 0) {
     return (
@@ -497,7 +541,7 @@ export default function CartPage() {
 
               {/* Shipping Address - For all users */}
               <div className="space-y-3 border-t border-gray-200 pt-4">
-                <p className="text-sm font-medium text-gray-700">Dirección de envío</p>
+                <p className="text-sm font-medium text-gray-700">Dirección de envío *</p>
                 <textarea
                   value={shippingAddress}
                   onChange={(e) => setShippingAddress(e.target.value)}
@@ -505,6 +549,68 @@ export default function CartPage() {
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
                 />
+              </div>
+
+              {/* Payment Method */}
+              <div className="space-y-3 border-t border-gray-200 pt-4">
+                <p className="text-sm font-medium text-gray-700">Método de pago *</p>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('yape')}
+                    className={`py-3 px-2 rounded-xl border-2 text-center font-medium transition-all cursor-pointer ${paymentMethod === 'yape'
+                      ? 'border-purple-500 bg-purple-50 text-purple-700'
+                      : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                      }`}
+                  >
+                    <span className="text-lg block mb-1">💜</span>
+                    Yape
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('plin')}
+                    className={`py-3 px-2 rounded-xl border-2 text-center font-medium transition-all cursor-pointer ${paymentMethod === 'plin'
+                      ? 'border-cyan-500 bg-cyan-50 text-cyan-700'
+                      : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                      }`}
+                  >
+                    <span className="text-lg block mb-1">💙</span>
+                    Plin
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('transferencia')}
+                    className={`py-3 px-2 rounded-xl border-2 text-center font-medium transition-all cursor-pointer ${paymentMethod === 'transferencia'
+                      ? 'border-green-500 bg-green-50 text-green-700'
+                      : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                      }`}
+                  >
+                    <span className="text-lg block mb-1">🏦</span>
+                    Transferencia
+                  </button>
+                </div>
+              </div>
+
+              {/* Contact Number (Optional) */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Número de contacto <span className="text-gray-400 font-normal">(opcional)</span>
+                </label>
+                <input
+                  type="tel"
+                  value={contactNumber}
+                  onChange={(e) => handleContactNumberChange(e.target.value)}
+                  placeholder="Ej: 999888777"
+                  maxLength={15}
+                  className={`w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 ${contactNumberError
+                    ? 'border-red-300 focus:ring-red-500'
+                    : 'border-gray-300 focus:ring-teal-500'
+                    }`}
+                />
+                {contactNumberError && (
+                  <p className="text-red-500 text-xs">{contactNumberError}</p>
+                )}
+                <p className="text-xs text-gray-400">Solo números, mínimo 9 dígitos</p>
               </div>
 
               {/* Checkout Button */}
