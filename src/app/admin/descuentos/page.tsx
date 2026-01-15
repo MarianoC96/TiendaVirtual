@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getPeruMonthYearISO, formatPeruDateTime, PERU_TIMEZONE } from '@/lib/timezone';
+import { getPeruMonthYearISO, formatPeruDateTime, formatPeruDate, PERU_TIMEZONE } from '@/lib/timezone';
 
 interface Discount {
   id: number;
@@ -22,6 +22,7 @@ interface Discount {
   deleted_by?: string;
   deleter_name?: string;
   deletion_reason?: string;
+  is_active_now?: boolean;
 }
 
 interface Product {
@@ -222,12 +223,17 @@ export default function AdminDiscountsPage() {
     setActiveTab(tab);
   };
 
+  // Helper helper to format dates strictly as YYYY-MM-DD -> DD/MM/YYYY
+  // to avoid any timezone shifting surprises in the display.
+  const formatDateOnly = (dateStr: string) => {
+    if (!dateStr) return '';
+    const part = dateStr.substring(0, 10); // "2026-01-12"
+    const [y, m, d] = part.split('-');
+    return `${d}/${m}/${y}`;
+  };
+
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-teal-600 border-t-transparent" />
-      </div>
-    );
+    // ...
   }
 
   return (
@@ -541,8 +547,8 @@ export default function AdminDiscountsPage() {
                       <td className="px-6 py-4 text-gray-500 text-sm">
                         {discount.start_date || discount.end_date ? (
                           <div>
-                            {discount.start_date && <div>Desde: {new Date(discount.start_date).toLocaleDateString('es-PE')}</div>}
-                            {discount.end_date && <div>Hasta: {new Date(discount.end_date).toLocaleDateString('es-PE')}</div>}
+                            {discount.start_date && <div>Desde: {formatDateOnly(discount.start_date)}</div>}
+                            {discount.end_date && <div>Hasta: {formatDateOnly(discount.end_date)}</div>}
                           </div>
                         ) : (
                           <span className="text-gray-400">Sin límite</span>
@@ -552,9 +558,17 @@ export default function AdminDiscountsPage() {
                         {discount.creator_name || <span className="text-gray-400">Sistema</span>}
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${discount.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${!discount.active
+                            ? 'bg-gray-100 text-gray-600'
+                            : discount.is_active_now
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-amber-100 text-amber-700'
                           }`}>
-                          {discount.active ? 'Activo' : 'Inactivo'}
+                          {!discount.active
+                            ? 'Inactivo'
+                            : discount.is_active_now
+                              ? 'Activo'
+                              : 'Vencido'}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">

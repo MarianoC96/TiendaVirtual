@@ -241,13 +241,6 @@ export default function OffersSection() {
                             {displayProducts.map((product) => (
                                 <div key={product.id} className="transform hover:-translate-y-1 transition-transform duration-300">
                                     <div className="relative group h-full">
-                                        {product.discount_info && (
-                                            <div className="absolute top-4 right-4 z-20">
-                                                <div className="bg-teal-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg shadow-teal-200">
-                                                    {product.discount_info.label}
-                                                </div>
-                                            </div>
-                                        )}
                                         <ProductCard product={product} />
                                     </div>
                                 </div>

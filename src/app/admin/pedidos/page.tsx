@@ -750,9 +750,18 @@ export default function AdminOrdersPage() {
                       </div>
                       <div className="flex-grow">
                         <p className="font-medium text-gray-900">{item.product.name}</p>
-                        <p className="text-sm text-gray-500">
-                          Cantidad: {item.quantity} × S/ {item.product.price.toFixed(2)}
-                        </p>
+                        <div className="text-sm text-gray-500">
+                          <p>Cantidad: {item.quantity} × S/ {item.product.price.toFixed(2)}</p>
+                          {(item.product as any).original_price > item.product.price && (
+                            <p className="text-xs text-green-600">
+                              Oferta: <span className="line-through text-gray-400">S/ {(item.product as any).original_price.toFixed(2)}</span>
+                              {' '}
+                              <span className="font-medium">
+                                ({(item.product as any).discount_info?.label || 'Descuento'})
+                              </span>
+                            </p>
+                          )}
+                        </div>
                         {item.product.customization?.previewBase64 && (
                           <span className="inline-block mt-1 px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">
                             ✨ Personalizado
@@ -761,6 +770,11 @@ export default function AdminOrdersPage() {
                       </div>
                       <div className="text-right">
                         <p className="font-bold text-gray-900">S/ {(item.product.price * item.quantity).toFixed(2)}</p>
+                        {(item.product as any).original_price > item.product.price && (
+                          <p className="text-xs text-gray-400 line-through">
+                            S/ {((item.product as any).original_price * item.quantity).toFixed(2)}
+                          </p>
+                        )}
                       </div>
                     </div>
                   ))}

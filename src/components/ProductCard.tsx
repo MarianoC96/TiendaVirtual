@@ -46,7 +46,7 @@ interface Product {
   variant_type?: VariantType | null;
 }
 
-export default function ProductCard({ product }: { product: Product }) {
+export default function ProductCard({ product, hideDiscountBadge = false }: { product: Product; hideDiscountBadge?: boolean }) {
   const { addItem, getItemQuantity } = useCart();
   const [timeRemaining, setTimeRemaining] = useState<ReturnType<typeof getRemainingTime>>(null);
   const [selectedVariant, setSelectedVariant] = useState<SelectedVariant | null>(null);
@@ -125,25 +125,25 @@ export default function ProductCard({ product }: { product: Product }) {
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
 
-          {/* Discount Badge */}
-          {product.discount_percentage && product.discount_percentage > 0 && (
-            <span className="absolute top-3 left-3 px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-full">
-              -{product.discount_percentage}%
+          {/* Discount Badge - Now Top Right */}
+          {!hideDiscountBadge && product.discount_percentage && product.discount_percentage > 0 && (
+            <span className="absolute top-3 right-3 z-10 px-3 py-1.5 bg-red-500 text-white text-xs font-bold rounded-full shadow-md">
+              {product.discount_percentage}% OFF
             </span>
           )}
 
-          {/* Has Variants Badge */}
+          {/* Has Variants Badge - Now Top Left */}
           {product.has_variants && (
-            <span className="absolute top-3 right-3 px-2 py-1 bg-purple-500 text-white text-xs font-medium rounded-full">
+            <span className="absolute top-3 left-3 z-10 px-2 py-1 bg-purple-500 text-white text-xs font-medium rounded-full opacity-90">
               {product.variant_type === 'size' && '👕 Tallas'}
               {product.variant_type === 'capacity' && '🥤 Opciones'}
               {product.variant_type === 'dimensions' && '📦 Tamaños'}
             </span>
           )}
 
-          {/* Countdown Timer */}
+          {/* Countdown Timer - Now Top Left */}
           {timeRemaining && !timeRemaining.isExpired && !product.has_variants && (
-            <div className="absolute top-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded-lg backdrop-blur-sm">
+            <div className="absolute top-3 left-3 z-10 bg-black/70 text-white text-xs px-2 py-1 rounded-lg backdrop-blur-sm">
               ⏰ {timeRemaining.days}d {timeRemaining.hours}h
             </div>
           )}
@@ -153,8 +153,8 @@ export default function ProductCard({ product }: { product: Product }) {
             onClick={handleAddToCart}
             disabled={!isInStock || (product.has_variants && !selectedVariant)}
             className={`absolute bottom-3 right-3 w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all cursor-pointer ${isInStock && (!product.has_variants || selectedVariant)
-                ? 'bg-teal-600 text-white hover:bg-teal-700 hover:scale-110'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              ? 'bg-teal-600 text-white hover:bg-teal-700 hover:scale-110'
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
           >
             {inCartQuantity > 0 ? (

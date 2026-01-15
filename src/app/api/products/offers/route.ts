@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { checkDiscountActivePeru } from '@/lib/timezone';
 
 interface Discount {
     id: number;
@@ -25,37 +26,74 @@ interface SupabaseProduct {
 
 export async function GET() {
     try {
-        const now = new Date().toISOString();
+        const nowIso = new Date().toISOString();
+        const now = new Date();
 
         // 1. Get active discounts (Category and Product based)
-        // Filter active, not deleted, and within date range
+        // Filter active, not deleted. We filter by date in JS to ensure consistency with products API
         const { data: discounts, error: discountError } = await db
             .from('discounts')
             .select('*')
             .eq('active', true)
-            .is('deleted_at', null)
-            .or(`start_date.is.null,start_date.lte.${now}`)
-            .or(`end_date.is.null,end_date.gte.${now}`);
+            .is('deleted_at', null);
 
         if (discountError) throw discountError;
 
-        const activeDiscounts = (discounts || []) as Discount[];
+        const activeDiscounts = (discounts || []) as any[];
         const categoryDiscounts = activeDiscounts.filter(d => d.applies_to === 'category');
 
-        // 2. Fetch all in-stock products with their categories
-        // (Fetching all is acceptable for small-medium shops. optimization would be needed for thousands)
+        // 2. Fetch all products with their categories
         const { data: products, error: productError } = await db
             .from('products')
             .select(`
                 *,
                 categories!inner(id, name, slug)
-            `)
-            .eq('in_stock', true);
+            `);
 
         if (productError) throw productError;
 
-        // 3. Process products to find offers and calculate best price
-        // Cast products to any[] or definition to avoid index errors, though Supabase types usually infer well
+        // Helper for date validation
+        const isValidDate = (d: any) => {
+            // Fix timezone offset issue. "2026-01-14" should last until 23:59:59 Peru Time (-05:00)
+            // Server might be UTC.
+            const startDate = d.start_date;
+            const endDate = d.end_date;
+
+            // We append -05:00 to force the parsing to treat the input as Peru time
+            // If d.start_date is "2026-11-01", we want "2026-11-01T00:00:00-05:00"
+
+            const checkStart = !startDate ||
+                (startDate.length === 10
+                    ? now >= new Date(`${startDate}T00:00:00-05:00`)
+                    : now >= new Date(startDate));
+
+            const checkEnd = !endDate ||
+                (endDate.length === 10
+                    ? now <= new Date(`${endDate}T23:59:59-05:00`)
+                    : now <= new Date(endDate));
+
+            return checkStart && checkEnd;
+        };
+
+        // 3. Prepare Banners for Category Discounts
+        const enrichedBanners = await Promise.all(categoryDiscounts.map(async (d) => {
+            if (!checkDiscountActivePeru(d.start_date, d.end_date)) return null;
+
+            const { data: cat } = await db
+                .from('categories')
+                .select('name, slug, icon')
+                .eq('id', d.target_id)
+                .single();
+
+            return {
+                ...d,
+                category: cat
+            };
+        }));
+
+        const validBanners = enrichedBanners.filter(b => b !== null);
+
+        // 4. Process products to find offers and calculate best price
         const productsList = products as any[];
 
         const offerProducts = productsList.map((product: SupabaseProduct) => {
@@ -73,7 +111,10 @@ export async function GET() {
             }
 
             // B. Active Discounts Table (Category)
-            const catDiscount = categoryDiscounts.find(d => d.target_id === product.category_id);
+            const catDiscount = categoryDiscounts.find(d =>
+                d.target_id === product.category_id &&
+                checkDiscountActivePeru(d.start_date, d.end_date)
+            );
             if (catDiscount) {
                 let amount = 0;
                 if (catDiscount.discount_type === 'percentage') {
@@ -96,7 +137,11 @@ export async function GET() {
             }
 
             // C. Active Discounts Table (Product specific)
-            const prodDiscount = activeDiscounts.find(d => d.applies_to === 'product' && d.target_id === product.id);
+            const prodDiscount = activeDiscounts.find(d =>
+                d.applies_to === 'product' &&
+                d.target_id === product.id &&
+                checkDiscountActivePeru(d.start_date, d.end_date)
+            );
             if (prodDiscount) {
                 let amount = 0;
                 if (prodDiscount.discount_type === 'percentage') {
@@ -119,10 +164,19 @@ export async function GET() {
 
             // If product has a discount, include it
             if (bestDiscount && bestDiscount.amount > 0) {
+                // Ensure we have a valid percentage for the UI badge
+                let percentage = 0;
+                if (bestDiscount.type === 'percentage') {
+                    percentage = bestDiscount.value;
+                } else {
+                    percentage = Math.round((bestDiscount.amount / product.price) * 100);
+                }
+
                 return {
                     ...product,
-                    category_name: product.categories?.name, // Flatten category name
+                    category_name: product.categories?.name,
                     final_price: product.price - bestDiscount.amount,
+                    discount_percentage: percentage, // Critical for the new UI Badge
                     discount_info: {
                         ...bestDiscount,
                         label: discountLabel
@@ -132,24 +186,9 @@ export async function GET() {
             return null; // No offer
         }).filter((p: any) => p !== null);
 
-        // 4. Prepare Banners for Category Discounts
-        // Enrich with category metadata
-        const enrichedBanners = await Promise.all(categoryDiscounts.map(async (d) => {
-            const { data: cat } = await db
-                .from('categories')
-                .select('name, slug, icon')
-                .eq('id', d.target_id)
-                .single();
-
-            return {
-                ...d,
-                category: cat
-            };
-        }));
-
         return NextResponse.json({
             products: offerProducts,
-            banners: enrichedBanners
+            banners: validBanners
         });
 
     } catch (error) {

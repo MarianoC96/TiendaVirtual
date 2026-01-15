@@ -200,22 +200,21 @@ export default function ProductDetailPage() {
           <div className="space-y-6">
             <div className="relative">
               {/* Discount Badge */}
-              {product.discount_percentage && product.discount_percentage > 0 && (
-                <span className="absolute top-4 left-4 z-10 px-3 py-1 bg-red-500 text-white font-bold rounded-full">
-                  -{product.discount_percentage}% OFF
+              {/* Discount Badge - Fixed "0" bug and moved to Right */}
+              {(product.discount_percentage || 0) > 0 && (
+                <span className="absolute top-4 right-4 z-20 px-3 py-1.5 bg-red-500 text-white font-bold rounded-full shadow-lg">
+                  {product.discount_percentage}% OFF
                 </span>
               )}
 
-              {/* Countdown Timer */}
+              {/* Countdown Timer - Moved to Left */}
               {timeRemaining && !timeRemaining.isExpired && (
-                <div className="absolute top-4 right-4 z-10 bg-red-500/90 backdrop-blur-sm text-white px-4 py-2 rounded-xl">
-                  <p className="text-xs font-medium mb-1">¡Oferta termina en!</p>
-                  <div className="flex items-center gap-1 text-lg font-bold">
+                <div className="absolute top-4 left-4 z-20 bg-black/70 backdrop-blur-sm text-white px-3 py-1.5 rounded-xl">
+                  <div className="flex items-center gap-1 text-sm font-bold">
+                    <span>⏰</span>
                     <span>{String(timeRemaining.days).padStart(2, '0')}d</span>
                     <span>:</span>
                     <span>{String(timeRemaining.hours).padStart(2, '0')}h</span>
-                    <span>:</span>
-                    <span>{String(timeRemaining.minutes).padStart(2, '0')}m</span>
                   </div>
                 </div>
               )}
@@ -293,10 +292,10 @@ export default function ProductDetailPage() {
                       onClick={() => setSelectedVariant(variant)}
                       disabled={!variant.in_stock}
                       className={`relative px-5 py-3 rounded-xl border-2 transition-all cursor-pointer ${selectedVariant?.id === variant.id
-                          ? 'bg-purple-600 text-white border-purple-600 shadow-lg shadow-purple-200'
-                          : variant.in_stock
-                            ? 'bg-white text-gray-700 border-gray-200 hover:border-purple-400 hover:shadow-md'
-                            : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                        ? 'bg-purple-600 text-white border-purple-600 shadow-lg shadow-purple-200'
+                        : variant.in_stock
+                          ? 'bg-white text-gray-700 border-gray-200 hover:border-purple-400 hover:shadow-md'
+                          : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                         }`}
                     >
                       <span className={`font-semibold text-lg ${!variant.in_stock ? 'line-through' : ''}`}>
@@ -350,7 +349,7 @@ export default function ProductDetailPage() {
                   </span>
                 )}
               </div>
-              {product.discount_percentage && product.discount_percentage > 0 && (
+              {(product.discount_percentage || 0) > 0 && (
                 <p className="text-green-600 font-medium">
                   ¡Ahorras S/ {(basePrice - finalPrice).toFixed(2)}!
                 </p>
@@ -411,8 +410,8 @@ export default function ProductDetailPage() {
               onClick={handleAddToCart}
               disabled={!currentInStock || (product.has_variants && !selectedVariant)}
               className={`w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all cursor-pointer ${currentInStock && (!product.has_variants || selectedVariant)
-                  ? 'bg-gradient-to-r from-teal-600 to-cyan-500 text-white hover:shadow-xl hover:scale-[1.02]'
-                  : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                ? 'bg-gradient-to-r from-teal-600 to-cyan-500 text-white hover:shadow-xl hover:scale-[1.02]'
+                : 'bg-gray-200 text-gray-500 cursor-not-allowed'
                 }`}
             >
               {inCartQuantity > 0 && (

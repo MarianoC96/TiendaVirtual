@@ -254,7 +254,22 @@ export default function CartPage() {
         const variantLabel = item.product.selected_variant
           ? ` (${item.product.selected_variant.label})`
           : '';
-        message += `• ${item.product.name}${variantLabel} (x${item.quantity}) - S/ ${(item.product.price * item.quantity).toFixed(2)}${hasCustomization ? ' ✨' : ''}\n`;
+
+        const price = item.product.price;
+        const quantity = item.quantity;
+        const totalItemPrice = price * quantity;
+
+        let priceStr = `S/ ${totalItemPrice.toFixed(2)}`;
+
+        // Show discount if present
+        if ((item.product as any).original_price && (item.product as any).original_price > price) {
+          const originalTotal = (item.product as any).original_price * quantity;
+          const discountLabel = (item.product as any).discount_info?.label ||
+            ((item.product as any).discount_percentage ? `${(item.product as any).discount_percentage}% OFF` : 'OFERTA');
+          priceStr = `~S/ ${originalTotal.toFixed(2)}~ S/ ${totalItemPrice.toFixed(2)} (${discountLabel})`;
+        }
+
+        message += `• ${item.product.name}${variantLabel} (x${quantity}) - ${priceStr}${hasCustomization ? ' ✨' : ''}\n`;
       });
 
       message += `\n💰 *Subtotal:* S/ ${total.toFixed(2)}`;

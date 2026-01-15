@@ -90,18 +90,20 @@ export async function POST(request: Request) {
     const orderCode = `${prefix}${nextNumber.toString().padStart(5, '0')}`;
 
     // Clean items - remove large base64 data to prevent database overflow
-    const cleanedItems = items.map((item: OrderItem) => ({
+    const cleanedItems = items.map((item: OrderItem & { product: any }) => ({
       product: {
         id: item.product.id,
         name: item.product.name,
         price: item.product.price,
+        original_price: item.product.original_price,
+        discount_info: item.product.discount_info,
         // Keep only a flag for customization, not the actual base64 data
         hasCustomization: !!item.product.customization
       },
       quantity: item.quantity
     }));
 
-    // Create order - simplify to avoid database overflow
+    // Create order
     const orderData: Record<string, unknown> = {
       order_code: orderCode,
       user_id: userId || null,
@@ -117,10 +119,9 @@ export async function POST(request: Request) {
       discount: discount || 0,
       total,
       coupon_code: couponCode || null,
+      discount_info: discountInfo || null, // Enable saving discount info
       status: 'pending'
     };
-
-    // Note: discount_info is intentionally not saved to avoid overflow
 
     let order;
     let orderError;
@@ -135,8 +136,9 @@ export async function POST(request: Request) {
     order = result.data;
     orderError = result.error;
 
-    // If error is about discount_info column, retry without it
+    // If error is about discount_info column (e.g. if it doesn't exist or is too small), retry without it
     if (orderError && orderError.message?.includes('discount_info')) {
+      console.warn('Failed to save discount_info, retrying without it:', orderError.message);
       delete orderData.discount_info;
       const retryResult = await db
         .from('orders')

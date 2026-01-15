@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { checkDiscountActivePeru } from '@/lib/timezone';
 
 export async function GET(request: Request) {
   try {
@@ -71,7 +72,7 @@ export async function GET(request: Request) {
 
     // Enrich with target names and usage count
     const enrichedDiscounts = await Promise.all(
-      (discounts || []).map(async (discount: { id: number; applies_to: string; target_id: number; created_by: number | null; deleted_by?: string }) => {
+      (discounts || []).map(async (discount: { id: number; applies_to: string; target_id: number; created_by: number | null; deleted_by?: string; start_date: string | null; end_date: string | null; active: boolean }) => {
         let target_name = null;
         let creator_name = null;
         let deleter_name = null;
@@ -113,12 +114,15 @@ export async function GET(request: Request) {
           }
         }
 
+        const isActiveNow = discount.active && checkDiscountActivePeru(discount.start_date, discount.end_date);
+
         return {
           ...discount,
           target_name,
           creator_name,
           deleter_name,
-          usage_count: usageMap.get(discount.id) || 0
+          usage_count: usageMap.get(discount.id) || 0,
+          is_active_now: isActiveNow
         };
       })
     );
