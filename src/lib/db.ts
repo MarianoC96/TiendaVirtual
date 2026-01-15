@@ -1,24 +1,24 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Get environment variables
+// Obtener variables de entorno
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Validate environment variables
+// Validar variables de entorno
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('⚠️ Supabase environment variables not set. Please configure:');
+  console.warn('⚠️ Las variables de entorno de Supabase no están configuradas. Por favor configure:');
   console.warn('   NEXT_PUBLIC_SUPABASE_URL');
   console.warn('   NEXT_PUBLIC_SUPABASE_ANON_KEY');
 }
 
-// Client-side Supabase client (uses anon key, respects RLS)
+// Cliente Supabase del lado del cliente (usa clave anónima, respeta RLS)
 export const supabase: SupabaseClient = createClient(
   supabaseUrl || 'https://placeholder.supabase.co',
   supabaseAnonKey || 'placeholder-key'
 );
 
-// Server-side Supabase client (uses service role, bypasses RLS)
+// Cliente Supabase del lado del servidor (usa clave de servicio, omite RLS)
 export const supabaseAdmin: SupabaseClient = createClient(
   supabaseUrl || 'https://placeholder.supabase.co',
   supabaseServiceRoleKey || supabaseAnonKey || 'placeholder-key',
@@ -30,7 +30,7 @@ export const supabaseAdmin: SupabaseClient = createClient(
   }
 );
 
-// Helper type for database tables
+// Tipo auxiliar para tablas de base de datos
 export type Tables = {
   categories: {
     id: number;
@@ -122,5 +122,5 @@ export type Tables = {
   };
 };
 
-// Export default for backward compatibility
+// Exportar por defecto para compatibilidad
 export default supabaseAdmin;

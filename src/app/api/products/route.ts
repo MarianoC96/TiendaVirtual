@@ -29,17 +29,17 @@ export async function GET(request: Request) {
 
     if (error) throw error;
 
-    // Fetch active discounts to apply
+    // Obtener descuentos activos para aplicar
     const { data: discounts } = await db
       .from('discounts')
       .select('*')
       .eq('active', true);
 
-    // Transform to match expected format and apply discounts
+    // Transformar para que coincida con el formato esperado y aplicar descuentos
     const transformedProducts = products?.map(p => {
-      // Find best applicable discount
-      // Base price is the product price
-      // Initial check: if product has internal discount_percentage, consider it a candidate for finalPrice
+      // Encontrar el mejor descuento aplicable
+      // El precio base es el precio del producto
+      // Verificación inicial: si el producto tiene discount_percentage interno, considérelo candidato para finalPrice
       let finalPrice = p.price;
       let appliedDiscount = null;
 
@@ -48,17 +48,17 @@ export async function GET(request: Request) {
       }
 
       const applicableDiscounts = discounts?.filter(d => {
-        // Date checks
+        // Verificaciones de fecha
         if (!checkDiscountActivePeru(d.start_date, d.end_date)) return false;
 
-        // Target checks
+        // Verificaciones de destino
         if (d.applies_to === 'product' && d.target_id === p.id) return true;
         if (d.applies_to === 'category' && d.target_id === p.category_id) return true;
 
         return false;
       }) || [];
 
-      // Check against external discounts from 'discounts' table
+      // Comparar con descuentos externos de la tabla 'discounts'
       for (const d of applicableDiscounts) {
         let tempPrice = p.price;
         if (d.discount_type === 'percentage') {
@@ -81,8 +81,8 @@ export async function GET(request: Request) {
       return {
         ...p,
         category_name: p.categories?.name,
-        price: finalPrice, // Current selling price
-        original_price: isOnSale ? p.price : null, // Show original only if discounted
+        price: finalPrice, // Precio de venta actual
+        original_price: isOnSale ? p.price : null, // Mostrar original solo si tiene descuento
         discount_percentage: discountPercentage,
         is_on_sale: isOnSale,
         discount_end_date: appliedDiscount?.end_date || null
@@ -91,7 +91,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(transformedProducts);
   } catch (error) {
-    console.error('Error fetching products:', error);
-    return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
+    console.error('Error al obtener productos:', error);
+    return NextResponse.json({ error: 'Error al obtener productos' }, { status: 500 });
   }
 }

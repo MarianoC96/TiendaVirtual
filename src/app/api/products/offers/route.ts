@@ -29,8 +29,8 @@ export async function GET() {
         const nowIso = new Date().toISOString();
         const now = new Date();
 
-        // 1. Get active discounts (Category and Product based)
-        // Filter active, not deleted. We filter by date in JS to ensure consistency with products API
+        // 1. Obtener descuentos activos (Basados en Categoría y Producto)
+        // Filtrar activos, no eliminados. Filtramos por fecha en JS para asegurar consistencia con la API de productos
         const { data: discounts, error: discountError } = await db
             .from('discounts')
             .select('*')
@@ -42,7 +42,7 @@ export async function GET() {
         const activeDiscounts = (discounts || []) as any[];
         const categoryDiscounts = activeDiscounts.filter(d => d.applies_to === 'category');
 
-        // 2. Fetch all products with their categories
+        // 2. Obtener todos los productos con sus categorías
         const { data: products, error: productError } = await db
             .from('products')
             .select(`
@@ -52,15 +52,15 @@ export async function GET() {
 
         if (productError) throw productError;
 
-        // Helper for date validation
+        // Función auxiliar para validación de fechas
         const isValidDate = (d: any) => {
-            // Fix timezone offset issue. "2026-01-14" should last until 23:59:59 Peru Time (-05:00)
-            // Server might be UTC.
+            // Corregir problema de offset de zona horaria. "2026-01-14" debería durar hasta 23:59:59 Hora Perú (-05:00)
+            // El servidor podría ser UTC.
             const startDate = d.start_date;
             const endDate = d.end_date;
 
-            // We append -05:00 to force the parsing to treat the input as Peru time
-            // If d.start_date is "2026-11-01", we want "2026-11-01T00:00:00-05:00"
+            // Agregamos -05:00 para forzar el análisis como hora de Perú
+            // Si d.start_date es "2026-11-01", queremos "2026-11-01T00:00:00-05:00"
 
             const checkStart = !startDate ||
                 (startDate.length === 10
@@ -75,7 +75,7 @@ export async function GET() {
             return checkStart && checkEnd;
         };
 
-        // 3. Prepare Banners for Category Discounts
+        // 3. Preparar Banners para Descuentos de Categoría
         const enrichedBanners = await Promise.all(categoryDiscounts.map(async (d) => {
             if (!checkDiscountActivePeru(d.start_date, d.end_date)) return null;
 
@@ -93,14 +93,14 @@ export async function GET() {
 
         const validBanners = enrichedBanners.filter(b => b !== null);
 
-        // 4. Process products to find offers and calculate best price
+        // 4. Procesar productos para encontrar ofertas y calcular el mejor precio
         const productsList = products as any[];
 
         const offerProducts = productsList.map((product: SupabaseProduct) => {
             let bestDiscount = null;
             let discountLabel = null;
 
-            // A. Legacy Discount (Directly on product table)
+            // A. Descuento heredado (Directamente en la tabla de productos)
             if (product.discount_percentage > 0) {
                 bestDiscount = {
                     amount: (product.price * product.discount_percentage) / 100,
@@ -110,7 +110,7 @@ export async function GET() {
                 discountLabel = `${product.discount_percentage}% OFF`;
             }
 
-            // B. Active Discounts Table (Category)
+            // B. Tabla de Descuentos Activos (Categoría)
             const catDiscount = categoryDiscounts.find(d =>
                 d.target_id === product.category_id &&
                 checkDiscountActivePeru(d.start_date, d.end_date)
@@ -123,7 +123,7 @@ export async function GET() {
                     amount = catDiscount.discount_value;
                 }
 
-                // Keep the best discount found so far
+                // Mantener el mejor descuento encontrado hasta ahora
                 if (!bestDiscount || amount > bestDiscount.amount) {
                     bestDiscount = {
                         id: catDiscount.id,
@@ -132,11 +132,11 @@ export async function GET() {
                         type: catDiscount.discount_type,
                         value: catDiscount.discount_value
                     };
-                    discountLabel = catDiscount.name; // e.g. "Verano 2026"
+                    discountLabel = catDiscount.name; // ej. "Verano 2026"
                 }
             }
 
-            // C. Active Discounts Table (Product specific)
+            // C. Tabla de Descuentos Activos (Específico del producto)
             const prodDiscount = activeDiscounts.find(d =>
                 d.applies_to === 'product' &&
                 d.target_id === product.id &&
@@ -162,9 +162,9 @@ export async function GET() {
                 }
             }
 
-            // If product has a discount, include it
+            // Si el producto tiene un descuento, incluirlo
             if (bestDiscount && bestDiscount.amount > 0) {
-                // Ensure we have a valid percentage for the UI badge
+                // Asegurar que tenemos un porcentaje válido para la etiqueta de la interfaz
                 let percentage = 0;
                 if (bestDiscount.type === 'percentage') {
                     percentage = bestDiscount.value;
@@ -176,14 +176,14 @@ export async function GET() {
                     ...product,
                     category_name: product.categories?.name,
                     final_price: product.price - bestDiscount.amount,
-                    discount_percentage: percentage, // Critical for the new UI Badge
+                    discount_percentage: percentage, // Crítico para la nueva etiqueta de UI
                     discount_info: {
                         ...bestDiscount,
                         label: discountLabel
                     }
                 };
             }
-            return null; // No offer
+            return null; // Sin oferta
         }).filter((p: any) => p !== null);
 
         return NextResponse.json({
@@ -192,7 +192,7 @@ export async function GET() {
         });
 
     } catch (error) {
-        console.error('Error fetching offers:', error);
-        return NextResponse.json({ error: 'Failed to fetch offers' }, { status: 500 });
+        console.error('Error al obtener ofertas:', error);
+        return NextResponse.json({ error: 'Error al obtener ofertas' }, { status: 500 });
     }
 }

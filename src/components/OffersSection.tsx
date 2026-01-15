@@ -49,12 +49,12 @@ export default function OffersSection() {
         const fetchOffers = async () => {
             try {
                 const res = await fetch('/api/products/offers');
-                if (!res.ok) throw new Error('Failed to fetch offers');
+                if (!res.ok) throw new Error('Error al obtener ofertas');
                 const data = await res.json();
                 setProducts(data.products || []);
                 setBanners(data.banners || []);
             } catch (error) {
-                console.error('Error fetching offers:', error);
+                console.error('Error al obtener ofertas:', error);
             } finally {
                 setLoading(false);
             }
@@ -62,17 +62,17 @@ export default function OffersSection() {
         fetchOffers();
     }, []);
 
-    // Extract unique categories from products
+    // Extraer categorías únicas de productos
     const categories = useMemo(() => {
         const uniqueCats = new Set(products.map(p => p.category_name).filter(Boolean));
         return Array.from(uniqueCats).sort() as string[];
     }, [products]);
 
-    // Filter Products (Flat list, randomized order initially)
+    // Filtrar Productos (Lista plana, orden aleatorio inicialmente)
     const filteredProducts = useMemo(() => {
         let result = products;
 
-        // Apply filters
+        // Aplicar filtros
         if (searchTerm || selectedCategory !== 'all') {
             result = result.filter(p => {
                 const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -84,29 +84,27 @@ export default function OffersSection() {
         return result;
     }, [products, searchTerm, selectedCategory]);
 
-    // Shuffle products only once when loaded to show "variety"
+    // Mezclar productos solo una vez al cargar para mostrar "variedad"
     const [displayProducts, setDisplayProducts] = useState<Product[]>([]);
 
     useEffect(() => {
         if (products.length > 0) {
-            // Simple shuffle
+            // Mezcla simple
             const shuffled = [...products].sort(() => 0.5 - Math.random());
             setDisplayProducts(shuffled);
         }
     }, [products]);
 
-    // Update display when filters change
+    // Actualizar visualización cuando cambian los filtros
     useEffect(() => {
         if (searchTerm || selectedCategory !== 'all') {
             setDisplayProducts(filteredProducts);
         } else if (products.length > 0 && selectedCategory === 'all' && !searchTerm) {
-            // If filters cleared, re-shuffle or revert to full shuffled list? 
-            // Let's just match filteredProducts (which is all products) but maybe keep random order? 
-            // For simplicity, just set to filteredProducts (all) but we might want to preserve the "random" feel.
-            // We'll rely on the initial shuffle state if strictly "all" is active, 
-            // but 'filteredProducts' changes reference. 
-            // Let's just use filteredProducts but shuffled if it's the full list.
-            // Actually to avoid jitter, let's just show filteredProducts.
+            // Si se borran los filtros, ¿volver a mezclar o volver a la lista mezclada completa?
+            // Vamos a coincidir con filteredProducts (que son todos los productos) pero conservando el orden "aleatorio".
+            // Confiaremos en el estado de mezcla inicial si estrictamente "todos" está activo,
+            // pero 'filteredProducts' cambia de referencia.
+            // Usemos solo filteredProducts.
             setDisplayProducts(filteredProducts);
         }
     }, [filteredProducts, searchTerm, selectedCategory]);
