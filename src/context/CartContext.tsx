@@ -120,6 +120,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
         );
 
         if (existingItem) {
+          // Check stock limit
+          if (product.stock !== undefined && existingItem.quantity >= product.stock) {
+            return currentItems;
+          }
+
           return currentItems.map(item =>
             item.product.id === product.id &&
               item.product.selected_variant?.id === product.selected_variant?.id &&
@@ -139,6 +144,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
       );
 
       if (existingItem) {
+        // Check stock limit
+        if (product.stock !== undefined && existingItem.quantity >= product.stock) {
+          return currentItems;
+        }
+
         return currentItems.map(item =>
           item.product.id === product.id &&
             !item.product.customization?.uploadedImage &&

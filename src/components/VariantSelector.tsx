@@ -130,6 +130,8 @@ export default function VariantSelector({
                                 }`}
                         >
                             {variant.label}
+                            {variant.type === 'capacity' && ' oz'}
+                            {variant.type === 'dimensions' && ' cm'}
                         </button>
                     ))}
                 </div>
@@ -166,6 +168,8 @@ export default function VariantSelector({
                     >
                         <span className={`font-medium ${!variant.in_stock ? 'line-through' : ''}`}>
                             {variant.label}
+                            {variant.type === 'capacity' && ' oz'}
+                            {variant.type === 'dimensions' && ' cm'}
                         </span>
                         <span className={`block text-xs ${selectedVariantId === variant.id ? 'text-teal-600' : 'text-gray-500'
                             }`}>

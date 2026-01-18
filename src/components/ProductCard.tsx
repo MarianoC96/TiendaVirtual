@@ -92,6 +92,13 @@ export default function ProductCard({ product, hideDiscountBadge = false }: { pr
 
     if (!isInStock) return;
 
+    // Check if we have enough stock for one more
+    const currentStock = selectedVariant ? selectedVariant.stock : product.stock;
+    if (inCartQuantity >= currentStock) {
+      alert(`Solo quedan ${currentStock} unidades disponibles`);
+      return;
+    }
+
     addItem({
       id: product.id,
       name: product.name,
@@ -100,7 +107,7 @@ export default function ProductCard({ product, hideDiscountBadge = false }: { pr
       discount_percentage: product.discount_percentage,
       image_url: product.image_url,
       short_description: product.short_description,
-      stock: selectedVariant ? selectedVariant.stock : product.stock,
+      stock: currentStock,
       in_stock: isInStock,
       discount_info: product.discount_info,
       has_variants: product.has_variants,
