@@ -19,7 +19,9 @@ export async function GET(
             .single();
 
         if (productError || !product) {
-            return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
+            // Return empty array instead of 404 to avoid console errors
+            // The frontend will handle this as "no variants available"
+            return NextResponse.json([]);
         }
 
         if (!product.has_variants) {

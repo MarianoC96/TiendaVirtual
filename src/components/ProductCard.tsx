@@ -120,14 +120,14 @@ export default function ProductCard({ product, hideDiscountBadge = false }: { pr
         {/* Image Container */}
         <div className="relative aspect-square bg-gradient-to-br from-teal-50 to-cyan-50 overflow-hidden">
           <img
-            src={product.image_url || 'https://via.placeholder.com/300x300/fef2f2/666?text=☕'}
+            src={product.image_url || '/images/placeholder.svg'}
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
 
           {/* Discount Badge - Now Top Right */}
           {!hideDiscountBadge && product.discount_percentage && product.discount_percentage > 0 && (
-            <span className="absolute top-3 right-3 z-10 px-3 py-1.5 bg-red-500 text-white text-xs font-bold rounded-full shadow-md">
+            <span className="absolute top-3 right-3 z-10 px-3 py-1.5 bg-red-600 text-white text-xs font-bold rounded-full shadow-md">
               {product.discount_percentage}% OFF
             </span>
           )}
@@ -170,7 +170,7 @@ export default function ProductCard({ product, hideDiscountBadge = false }: { pr
         {/* Content */}
         <div className="p-4">
           {/* Category */}
-          <p className="text-xs text-teal-600 font-medium uppercase tracking-wide mb-1">
+          <p className="text-xs text-teal-700 font-medium uppercase tracking-wide mb-1">
             {product.category_name || product.category}
           </p>
 
@@ -212,7 +212,7 @@ export default function ProductCard({ product, hideDiscountBadge = false }: { pr
                   S/ {finalPrice.toFixed(2)}
                 </span>
                 {product.original_price && product.original_price > finalPrice && (
-                  <span className="text-sm text-gray-400 line-through">
+                  <span className="text-sm text-gray-500 line-through">
                     S/ {product.original_price.toFixed(2)}
                   </span>
                 )}

@@ -162,26 +162,33 @@ export default function Header() {
               </form>
 
               {/* Cart Button */}
-              <Link href="/carrito" className="relative p-2 text-gray-700 hover:text-teal-600 transition-colors">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                {itemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center bg-amber-500 text-white text-xs font-bold rounded-full">
-                    {itemCount > 99 ? '99+' : itemCount}
-                  </span>
-                )}
+              <Link href="/carrito" aria-label="Ver carrito de compras" className="group flex flex-col items-center gap-0.5 text-gray-700 hover:text-teal-600 transition-colors">
+                <div className="relative">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  {itemCount > 0 && (
+                    <span className="absolute -top-2 -right-2 w-4 h-4 flex items-center justify-center bg-amber-500 text-white text-[10px] font-bold rounded-full border-2 border-white">
+                      {itemCount > 99 ? '99+' : itemCount}
+                    </span>
+                  )}
+                </div>
+                <span className="text-[10px] font-medium leading-none">Carrito</span>
               </Link>
 
               {/* User Menu */}
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="p-2 text-gray-700 hover:text-teal-600 transition-colors"
+                  aria-label="Menú de usuario"
+                  className="group flex flex-col items-center gap-0.5 text-gray-700 hover:text-teal-600 transition-colors cursor-pointer"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
+                  <span className="text-[10px] font-medium leading-none">
+                    {isAuthenticated ? 'Cuenta' : 'Ingresar'}
+                  </span>
                 </button>
 
                 {showUserMenu && (
@@ -236,7 +243,7 @@ export default function Header() {
               <Link href="/" onClick={() => setShowMobileMenu(false)} className="flex items-center gap-2">
                 <img src="/logo.png" alt="MAE Party & Print" className="h-20 w-auto" />
               </Link>
-              <button onClick={() => setShowMobileMenu(false)} className="p-2 text-gray-500">
+              <button onClick={() => setShowMobileMenu(false)} aria-label="Cerrar menú" className="p-2 text-gray-500">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
