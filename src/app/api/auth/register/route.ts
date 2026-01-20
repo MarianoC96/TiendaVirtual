@@ -4,10 +4,10 @@ import bcrypt from 'bcryptjs';
 
 export async function POST(request: Request) {
   try {
-    const { email, password, name } = await request.json();
+    const { email, password, name, phone } = await request.json();
 
-    if (!email || !password || !name) {
-      return NextResponse.json({ error: 'Todos los campos son requeridos' }, { status: 400 });
+    if (!email || !password || !name || !phone) {
+      return NextResponse.json({ error: 'Todos los campos son requeridos, incluido el teléfono' }, { status: 400 });
     }
 
     // Check if user exists
@@ -29,9 +29,10 @@ export async function POST(request: Request) {
         email,
         password_hash: hashedPassword,
         name,
+        phone,
         role: 'client'
       })
-      .select('id, email, name, role')
+      .select('id, email, name, role, phone')
       .single();
 
     if (error) throw error;

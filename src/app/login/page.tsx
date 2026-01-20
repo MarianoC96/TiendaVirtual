@@ -98,11 +98,6 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* Demo Credentials */}
-          <div className="mt-6 p-4 bg-gray-50 rounded-xl">
-            <p className="text-xs text-gray-500 text-center mb-2">Credenciales de prueba (Admin):</p>
-            <p className="text-xs text-gray-700 text-center font-mono">admin@maepartyprint.com / admin123</p>
-          </div>
         </div>
       </div>
     </div>

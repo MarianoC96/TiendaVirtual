@@ -10,10 +10,17 @@ export default function RegisterPage() {
   const router = useRouter();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Allow only numbers
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/[^0-9]/g, '');
+    setPhone(val);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,8 +36,13 @@ export default function RegisterPage() {
       return;
     }
 
+    if (phone.length < 9) {
+      setError('El teléfono debe tener al menos 9 dígitos');
+      return;
+    }
+
     setLoading(true);
-    const result = await register(email, password, name);
+    const result = await register(email, password, name, phone);
 
     if (result.success) {
       router.push('/');
@@ -83,6 +95,19 @@ export default function RegisterPage() {
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 placeholder="tu@email.com"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={handlePhoneChange}
+                required
+                maxLength={15}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                placeholder="999888777"
               />
             </div>
 

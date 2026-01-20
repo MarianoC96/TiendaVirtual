@@ -255,18 +255,22 @@ export default function UsuariosPage() {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right">
                                             <div className="flex items-center justify-end gap-2">
-                                                <button
-                                                    onClick={() => handleEdit(user)}
-                                                    className="px-3 py-1 text-teal-600 hover:bg-teal-50 rounded-lg text-sm cursor-pointer"
-                                                >
-                                                    Editar
-                                                </button>
-                                                <button
-                                                    onClick={() => toggleActive(user)}
-                                                    className={`px-3 py-1 rounded-lg text-sm cursor-pointer ${user.active ? 'text-amber-600 hover:bg-amber-50' : 'text-green-600 hover:bg-green-50'}`}
-                                                >
-                                                    {user.active ? 'Deshabilitar' : 'Habilitar'}
-                                                </button>
+                                                {user.name !== 'SAdmin' && (
+                                                    <button
+                                                        onClick={() => handleEdit(user)}
+                                                        className="px-3 py-1 text-teal-600 hover:bg-teal-50 rounded-lg text-sm cursor-pointer"
+                                                    >
+                                                        Editar
+                                                    </button>
+                                                )}
+                                                {user.name !== 'SAdmin' && (
+                                                    <button
+                                                        onClick={() => toggleActive(user)}
+                                                        className={`px-3 py-1 rounded-lg text-sm cursor-pointer ${user.active ? 'text-amber-600 hover:bg-amber-50' : 'text-green-600 hover:bg-green-50'}`}
+                                                    >
+                                                        {user.active ? 'Deshabilitar' : 'Habilitar'}
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

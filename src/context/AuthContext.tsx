@@ -7,6 +7,7 @@ interface User {
   email: string;
   name: string;
   role: 'admin' | 'worker' | 'assistant' | 'user' | 'client';
+  phone?: string;
 }
 
 interface AuthContextType {
@@ -19,7 +20,7 @@ interface AuthContextType {
   hasPermission: (permission: string) => boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string; user?: User }>;
-  register: (email: string, password: string, name: string) => Promise<{ success: boolean; error?: string }>;
+  register: (email: string, password: string, name: string, phone: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   refreshPermissions: () => Promise<void>;
 }
@@ -102,12 +103,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = async (email: string, password: string, name: string) => {
+  const register = async (email: string, password: string, name: string, phone: string) => {
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, name })
+        body: JSON.stringify({ email, password, name, phone })
       });
       const data = await res.json();
 
