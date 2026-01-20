@@ -42,25 +42,36 @@ export function useProductFilters({
         }
     }, [products]);
 
-    // Extract Filter Options
+    // 1. First, isolate products by Active Category for accurate filter options
+    const productsByCategory = useMemo(() => {
+        if (!selectedCategory || selectedCategory === 'all') return products;
+
+        const selectedCat = categories.find(c => c.slug === selectedCategory);
+        if (!selectedCat) return products;
+
+        return products.filter(p =>
+            p.category_name?.toLowerCase() === selectedCat.name.toLowerCase() ||
+            p.category?.toLowerCase() === selectedCat.name.toLowerCase()
+        );
+    }, [products, selectedCategory, categories]);
+
+    // Extract Filter Options (Based on products in current category)
     const filterOptions = useMemo(() => {
         const capacities = new Set<string>();
         const clothingSizes = new Set<string>();
         const dimensions = new Set<string>();
 
-        products.forEach(p => {
+        // Use the category-filtered list, so we don't show "oz" for T-shirts
+        productsByCategory.forEach(p => {
             p.product_variants?.forEach(v => {
-                if (v.variant_type === 'capacity') {
-                    capacities.add(v.variant_label);
-                } else if (v.variant_type === 'size' || v.variant_type === 'dimensions') {
-                    const label = v.variant_label.trim();
-                    const isClothingSize = PREDEFINED_SIZES.some(s => label.toUpperCase() === s) || /^[A-Za-z]+$/.test(label);
+                const label = v.variant_label.trim();
 
-                    if (isClothingSize) {
-                        clothingSizes.add(label);
-                    } else {
-                        dimensions.add(label);
-                    }
+                if (v.variant_type === 'capacity') {
+                    capacities.add(label);
+                } else if (v.variant_type === 'size') {
+                    clothingSizes.add(label);
+                } else if (v.variant_type === 'dimensions') {
+                    dimensions.add(label);
                 }
             });
         });
@@ -75,28 +86,17 @@ export function useProductFilters({
             }),
             dimensions: Array.from(dimensions).sort()
         };
-    }, [products]);
+    }, [productsByCategory]);
 
     // Filter Logic
     const filteredProducts = useMemo(() => {
-        return products.filter(product => {
+        return productsByCategory.filter(product => {
             // 1. Search Query
-            const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                product.short_description?.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesSearch = searchQuery === '' ||
+                product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (product.short_description && product.short_description.toLowerCase().includes(searchQuery.toLowerCase()));
 
-            // 2. Category
-            let matchesCategory = true;
-            if (selectedCategory) {
-                const selectedCat = categories.find(c => c.slug === selectedCategory);
-                if (selectedCat) {
-                    matchesCategory = product.category_name?.toLowerCase() === selectedCat.name.toLowerCase() ||
-                        product.category?.toLowerCase() === selectedCat.name.toLowerCase();
-                } else {
-                    matchesCategory = false;
-                }
-            }
-
-            // 3. Capacity
+            // 2. Capacity
             let matchesCapacity = true;
             if (selectedCapacity) {
                 matchesCapacity = product.product_variants?.some(v =>
@@ -104,7 +104,7 @@ export function useProductFilters({
                 ) || false;
             }
 
-            // 4. Size/Dimensions
+            // 3. Size/Dimensions
             let matchesSize = true;
             if (selectedSize) {
                 matchesSize = product.product_variants?.some(v =>
@@ -112,15 +112,15 @@ export function useProductFilters({
                 ) || false;
             }
 
-            // 5. Price
+            // 4. Price
             let matchesPrice = true;
             if (priceRange[0] > 0 || priceRange[1] < maxProductPrice) {
                 matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1];
             }
 
-            return matchesSearch && matchesCategory && matchesCapacity && matchesSize && matchesPrice;
+            return matchesSearch && matchesCapacity && matchesSize && matchesPrice;
         });
-    }, [products, searchQuery, selectedCategory, categories, selectedCapacity, selectedSize, priceRange, maxProductPrice]);
+    }, [productsByCategory, searchQuery, selectedCapacity, selectedSize, priceRange, maxProductPrice]);
 
     // Grouping Logic
     const groupedProducts = useMemo(() => {

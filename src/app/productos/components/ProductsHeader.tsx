@@ -6,6 +6,7 @@ interface ProductsHeaderProps {
     setSearchQuery: (q: string) => void;
     viewMode: ViewMode;
     setViewMode: (mode: ViewMode) => void;
+    selectedCategoryName?: string;
 }
 
 export function ProductsHeader({
@@ -13,14 +14,15 @@ export function ProductsHeader({
     searchQuery,
     setSearchQuery,
     viewMode,
-    setViewMode
+    setViewMode,
+    selectedCategoryName
 }: ProductsHeaderProps) {
     return (
         <div className="mb-8 space-y-4">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
-                        Explorar Productos
+                        {selectedCategoryName ? selectedCategoryName : 'Explorar Productos'}
                     </h1>
                     <p className="text-gray-600 mt-1">
                         {totalProducts} {totalProducts === 1 ? 'producto encontrado' : 'productos encontrados'}

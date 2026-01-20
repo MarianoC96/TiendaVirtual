@@ -38,6 +38,8 @@ function ProductsContent() {
     initialCategory: urlCategory
   });
 
+  const selectedCategoryName = categories.find(c => c.slug === selectedCategory)?.name;
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -48,6 +50,7 @@ function ProductsContent() {
           setSearchQuery={setSearchQuery}
           viewMode={viewMode}
           setViewMode={setViewMode}
+          selectedCategoryName={selectedCategoryName}
         />
 
         <div className="flex flex-col lg:flex-row gap-8">
