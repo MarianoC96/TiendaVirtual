@@ -12,7 +12,8 @@ export async function GET(request: Request) {
       .from('products')
       .select(`
         *,
-        categories!inner(name)
+        categories!inner(name),
+        product_variants(id, variant_type, variant_label, price, stock)
       `)
       .order('is_featured', { ascending: false })
       .order('total_sold', { ascending: false });
