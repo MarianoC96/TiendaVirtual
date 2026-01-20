@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Product, Category, ViewMode } from '../types';
+import { PREDEFINED_SIZES } from '@/lib/variants';
 
 interface UseProductFiltersProps {
     products: Product[];
@@ -37,9 +38,6 @@ export function useProductFilters({
             const max = Math.max(...products.map(p => p.price), 0);
             const roundedMax = Math.ceil(max / 10) * 10;
             setMaxProductPrice(roundedMax);
-            // Only reset range if it was default? Or expand it? 
-            // Let's keep existing logic behavior: initialize, but maybe not reset if user set it? 
-            // The original code reset it on load: setPriceRange([0, roundedMax]);
             setPriceRange(prev => [prev[0], Math.max(prev[1], roundedMax)]);
         }
     }, [products]);
@@ -50,15 +48,13 @@ export function useProductFilters({
         const clothingSizes = new Set<string>();
         const dimensions = new Set<string>();
 
-        const clothingSizeOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'];
-
         products.forEach(p => {
             p.product_variants?.forEach(v => {
                 if (v.variant_type === 'capacity') {
                     capacities.add(v.variant_label);
                 } else if (v.variant_type === 'size' || v.variant_type === 'dimensions') {
                     const label = v.variant_label.trim();
-                    const isClothingSize = clothingSizeOrder.some(s => label.toUpperCase() === s) || /^[A-Za-z]+$/.test(label);
+                    const isClothingSize = PREDEFINED_SIZES.some(s => label.toUpperCase() === s) || /^[A-Za-z]+$/.test(label);
 
                     if (isClothingSize) {
                         clothingSizes.add(label);
@@ -72,8 +68,8 @@ export function useProductFilters({
         return {
             capacities: Array.from(capacities).sort((a, b) => parseFloat(a) - parseFloat(b)),
             clothingSizes: Array.from(clothingSizes).sort((a, b) => {
-                const idxA = clothingSizeOrder.indexOf(a.toUpperCase());
-                const idxB = clothingSizeOrder.indexOf(b.toUpperCase());
+                const idxA = PREDEFINED_SIZES.indexOf(a.toUpperCase());
+                const idxB = PREDEFINED_SIZES.indexOf(b.toUpperCase());
                 if (idxA !== -1 && idxB !== -1) return idxA - idxB;
                 return a.localeCompare(b);
             }),
@@ -93,7 +89,6 @@ export function useProductFilters({
             if (selectedCategory) {
                 const selectedCat = categories.find(c => c.slug === selectedCategory);
                 if (selectedCat) {
-                    // Check both name and raw category string to be safe
                     matchesCategory = product.category_name?.toLowerCase() === selectedCat.name.toLowerCase() ||
                         product.category?.toLowerCase() === selectedCat.name.toLowerCase();
                 } else {
@@ -118,8 +113,6 @@ export function useProductFilters({
             }
 
             // 5. Price
-            // Logic adjusted: if range is full [0, max], ignore? 
-            // Original: if (priceRange[0] > 0 || priceRange[1] < maxProductPrice)
             let matchesPrice = true;
             if (priceRange[0] > 0 || priceRange[1] < maxProductPrice) {
                 matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1];

@@ -6,7 +6,7 @@ import { getRemainingTime } from '@/lib/schema';
 import { useEffect, useState } from 'react';
 import VariantSelector from './VariantSelector';
 
-type VariantType = 'size' | 'capacity' | 'dimensions';
+import { Product, VariantType } from '@/lib/schema';
 
 interface SelectedVariant {
   id: number;
@@ -16,34 +16,6 @@ interface SelectedVariant {
   stock: number;
   is_default: boolean;
   in_stock: boolean;
-}
-
-interface Product {
-  id: number;
-  name: string;
-  category: string;
-  category_name?: string;
-  price: number;
-  original_price?: number | null;
-  discount_percentage?: number;
-  discount_end_date?: string | null;
-  in_stock: number | boolean;
-  stock: number;
-  rating: number;
-  review_count: number;
-  short_description?: string;
-  image_url?: string;
-  discount_info?: {
-    id?: number;
-    applies_to?: string;
-    amount: number;
-    type: string;
-    value: number;
-    label: string;
-  };
-  // Variant fields
-  has_variants?: boolean;
-  variant_type?: VariantType | null;
 }
 
 export default function ProductCard({ product, hideDiscountBadge = false }: { product: Product; hideDiscountBadge?: boolean }) {

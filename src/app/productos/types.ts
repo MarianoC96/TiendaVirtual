@@ -12,6 +12,7 @@ export interface ProductVariant {
 export interface Product extends Omit<SchemaProduct, 'variants'> {
     category_name?: string;
     product_variants?: ProductVariant[];
+    variants?: ProductVariant[]; // Keep variants too for compatibility
 }
 
 export interface Category extends SchemaCategory {

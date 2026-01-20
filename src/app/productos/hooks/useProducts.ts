@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Product, Category } from '../types';
 
+import { fetcher } from '@/lib/fetcher';
+
 export function useProducts() {
     const [products, setProducts] = useState<Product[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
@@ -11,17 +13,10 @@ export function useProducts() {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const [productsRes, categoriesRes] = await Promise.all([
-                    fetch('/api/products'),
-                    fetch('/api/categories')
+                const [productsData, categoriesData] = await Promise.all([
+                    fetcher<Product[]>('/api/products'),
+                    fetcher<Category[]>('/api/categories')
                 ]);
-
-                if (!productsRes.ok || !categoriesRes.ok) {
-                    throw new Error('Failed to fetch data');
-                }
-
-                const productsData = await productsRes.json();
-                const categoriesData = await categoriesRes.json();
 
                 setProducts(productsData);
                 setCategories(categoriesData);

@@ -3,13 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-interface Category {
-  id: number;
-  name: string;
-  slug: string;
-  icon: string;
-  description?: string;
-}
+import { Category } from '@/lib/schema';
 
 export default function Categories() {
   const [categories, setCategories] = useState<Category[]>([]);

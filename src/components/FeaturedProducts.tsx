@@ -4,22 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import ProductCard from './ProductCard';
 
-interface Product {
-  id: number;
-  name: string;
-  category: string;
-  category_name?: string;
-  price: number;
-  original_price?: number | null;
-  discount_percentage?: number;
-  discount_end_date?: string | null;
-  in_stock: number | boolean;
-  stock: number;
-  rating: number;
-  review_count: number;
-  short_description?: string;
-  image_url?: string;
-}
+import { Product } from '@/lib/schema';
 
 export default function FeaturedProducts() {
   const [products, setProducts] = useState<Product[]>([]);

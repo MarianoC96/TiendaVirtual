@@ -42,6 +42,14 @@ export interface Product {
   is_featured: boolean;
   is_on_sale: boolean;
   total_sold: number;
+  discount_info?: {
+    id?: number;
+    applies_to?: string;
+    amount: number;
+    type: string;
+    value: number;
+    label: string;
+  };
   // Variant fields
   has_variants?: boolean;
   variant_type?: VariantType | null;
