@@ -16,26 +16,7 @@ interface DiscountBanner {
     };
 }
 
-interface Product {
-    id: number;
-    name: string;
-    category: string;
-    category_name?: string;
-    price: number;
-    final_price: number;
-    discount_info?: {
-        amount: number;
-        type: string;
-        value: number;
-        label: string;
-    };
-    in_stock: boolean;
-    stock: number;
-    rating: number;
-    review_count: number;
-    image_url?: string;
-    customization?: any;
-}
+import { Product } from '@/lib/schema';
 
 export default function OffersSection() {
     const [products, setProducts] = useState<Product[]>([]);

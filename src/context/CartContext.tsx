@@ -11,44 +11,7 @@ interface CustomizationData {
   previewBase64: string | null;
 }
 
-// Selected variant info for cart
-interface SelectedVariant {
-  id: number;
-  type: 'size' | 'capacity' | 'dimensions';
-  label: string;
-  price: number;
-}
-
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-  original_price?: number | null;
-  discount_percentage?: number;
-  image_url?: string;
-  short_description?: string;
-  stock?: number;
-  in_stock?: boolean;
-  customization?: CustomizationData;
-  category_id?: number;
-  discount_info?: {
-    id?: number;
-    applies_to?: string;
-    amount: number;
-    type: string;
-    value: number;
-    label: string;
-  };
-  // Variant fields
-  has_variants?: boolean;
-  variant_type?: 'size' | 'capacity' | 'dimensions' | null;
-  selected_variant?: SelectedVariant;
-}
-
-interface CartItem {
-  product: Product;
-  quantity: number;
-}
+import { Product, CartItem } from '@/lib/schema';
 
 interface CartContextType {
   items: CartItem[];

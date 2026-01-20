@@ -10,7 +10,9 @@ import { Product, VariantType } from '@/lib/schema';
 
 interface SelectedVariant {
   id: number;
-  type: VariantType;
+  product_id: number;
+  variant_type: VariantType;
+  variant_label: string;
   label: string;
   price: number;
   stock: number;
@@ -31,8 +33,12 @@ export default function ProductCard({ product, hideDiscountBadge = false }: { pr
     ? selectedVariant.in_stock && selectedVariant.stock > 0
     : (typeof product.in_stock === 'number' ? product.in_stock === 1 : Boolean(product.in_stock)) && product.stock > 0;
 
-  // Calculate final price - use variant price if selected
-  const basePrice = selectedVariant ? selectedVariant.price : product.price;
+  // Calculate final price - use variant price if selected. 
+  // If original_price is present, product.price is already discounted, so we use original_price as base.
+  const basePrice = selectedVariant
+    ? selectedVariant.price
+    : (product.original_price || product.price);
+
   const finalPrice = product.discount_percentage && product.discount_percentage > 0
     ? basePrice * (1 - product.discount_percentage / 100)
     : basePrice;
@@ -72,23 +78,13 @@ export default function ProductCard({ product, hideDiscountBadge = false }: { pr
     }
 
     addItem({
-      id: product.id,
-      name: product.name,
+      ...product,
       price: finalPrice,
-      original_price: product.original_price,
-      discount_percentage: product.discount_percentage,
-      image_url: product.image_url,
-      short_description: product.short_description,
       stock: currentStock,
       in_stock: isInStock,
-      discount_info: product.discount_info,
-      has_variants: product.has_variants,
-      variant_type: product.variant_type,
+      image_url: product.image_url,
       selected_variant: selectedVariant ? {
-        id: selectedVariant.id,
-        type: selectedVariant.type,
-        label: selectedVariant.label,
-        price: selectedVariant.price
+        ...selectedVariant
       } : undefined
     });
   };

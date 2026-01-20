@@ -7,40 +7,7 @@ import { useCart } from '@/context/CartContext';
 import { getRemainingTime } from '@/lib/schema';
 import ProductCustomizer from '@/components/ProductCustomizer';
 
-type VariantType = 'size' | 'capacity' | 'dimensions';
-
-interface ProductVariant {
-  id: number;
-  type: VariantType;
-  label: string;
-  price: number;
-  stock: number;
-  is_default: boolean;
-  in_stock: boolean;
-}
-
-interface Product {
-  id: number;
-  name: string;
-  category: string;
-  category_name?: string;
-  price: number;
-  original_price?: number | null;
-  discount_percentage?: number;
-  discount_end_date?: string | null;
-  in_stock: number | boolean;
-  stock: number;
-  rating: number;
-  review_count: number;
-  description?: string;
-  short_description?: string;
-  image_url?: string;
-  customizable?: number;
-  product_type?: string;
-  has_variants?: boolean;
-  variant_type?: VariantType | null;
-  variants?: ProductVariant[];
-}
+import { Product, ProductVariant, VariantType } from '@/lib/schema';
 
 interface CustomizationData {
   uploadedImage: string | null;
@@ -122,24 +89,15 @@ export default function ProductDetailPage() {
     const effectivePrice = selectedVariant ? selectedVariant.price : finalPrice;
     const effectiveStock = selectedVariant ? selectedVariant.stock : product.stock;
 
-    const itemData = {
-      id: product.id,
-      name: product.name,
+    const itemData: Product = {
+      ...product,
       price: effectivePrice,
-      original_price: product.original_price,
-      discount_percentage: product.discount_percentage,
-      image_url: customization?.previewBase64 || product.image_url,
-      short_description: product.short_description,
       stock: effectiveStock,
       in_stock: selectedVariant ? selectedVariant.in_stock : product.in_stock === 1,
+      image_url: customization?.previewBase64 || product.image_url,
       customization: customization?.uploadedImage ? customization : undefined,
-      has_variants: product.has_variants,
-      variant_type: product.variant_type,
       selected_variant: selectedVariant ? {
-        id: selectedVariant.id,
-        type: selectedVariant.type,
-        label: selectedVariant.label,
-        price: selectedVariant.price
+        ...selectedVariant
       } : undefined
     };
 

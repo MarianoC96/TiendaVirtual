@@ -1,22 +1,18 @@
-import { Product as SchemaProduct, Category as SchemaCategory } from '@/lib/schema';
+import {
+    Product as SchemaProduct,
+    Category as SchemaCategory,
+    ProductVariant as SchemaProductVariant
+} from '@/lib/schema';
 
-export interface ProductVariant {
-    id: number;
-    variant_type: 'size' | 'capacity' | 'dimensions';
-    variant_label: string;
-    price: number;
-    stock: number;
-}
+// Export the same variant type to avoid duplication errors and ensure compatibility
+export type ProductVariant = SchemaProductVariant;
 
-// Extending or redefining based on usage in page.tsx
-export interface Product extends Omit<SchemaProduct, 'variants'> {
+export interface Product extends SchemaProduct {
     category_name?: string;
+    // We can also keep specific aliases if used in filters
     product_variants?: ProductVariant[];
-    variants?: ProductVariant[]; // Keep variants too for compatibility
 }
 
-export interface Category extends SchemaCategory {
-    // Add any extra fields if page.tsx had them, seemingly standard.
-}
+export interface Category extends SchemaCategory { }
 
 export type ViewMode = 'grid' | 'grouped';

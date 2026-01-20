@@ -376,9 +376,9 @@ export default function CartPage() {
                       <p className="text-sm text-gray-500">S/ {item.product.price.toFixed(2)}</p>
                       {item.product.selected_variant && (
                         <span className="inline-block mt-1 px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
-                          {item.product.selected_variant.type === 'size' && `👕 Talla: ${item.product.selected_variant.label}`}
-                          {item.product.selected_variant.type === 'capacity' && `🥤 ${item.product.selected_variant.label}`}
-                          {item.product.selected_variant.type === 'dimensions' && `📦 ${item.product.selected_variant.label}`}
+                          {item.product.selected_variant.variant_type === 'size' && `👕 Talla: ${item.product.selected_variant.label}`}
+                          {item.product.selected_variant.variant_type === 'capacity' && `🥤 ${item.product.selected_variant.label}`}
+                          {item.product.selected_variant.variant_type === 'dimensions' && `📦 ${item.product.selected_variant.label}`}
                         </span>
                       )}
                       {item.product.customization?.previewBase64 && (

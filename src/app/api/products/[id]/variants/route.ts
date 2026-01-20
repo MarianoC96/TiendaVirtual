@@ -40,8 +40,10 @@ export async function GET(
         // Transform for client use
         const clientVariants = (variants || []).map(v => ({
             id: v.id,
-            type: v.variant_type,
-            label: v.variant_label,
+            product_id: productId,
+            variant_type: v.variant_type,
+            variant_label: v.variant_label,
+            label: v.variant_label, // Keep for backward compatibility in UI
             price: v.price,
             stock: v.stock,
             is_default: v.is_default,

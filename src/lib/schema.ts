@@ -16,9 +16,11 @@ export interface ProductVariant {
   product_id: number;
   variant_type: VariantType;
   variant_label: string;
+  label: string;
   price: number;
   stock: number;
   is_default: boolean;
+  in_stock: boolean;
   created_at?: string;
 }
 
@@ -32,12 +34,12 @@ export interface Product {
   original_price: number | null;
   discount_percentage: number;
   discount_end_date: string | null;
-  in_stock: boolean;
+  in_stock: boolean | number; // Support both for legacy/API compatibility
   stock: number;
   rating: number;
   review_count: number;
-  description: string;
-  short_description: string;
+  description?: string;
+  short_description?: string;
   image_url: string;
   is_featured: boolean;
   is_on_sale: boolean;
@@ -54,7 +56,10 @@ export interface Product {
   has_variants?: boolean;
   variant_type?: VariantType | null;
   variants?: ProductVariant[];
-  selected_variant?: ProductVariant;
+  selected_variant?: ProductVariant; // For cart and selection
+  customization?: any; // For customized items in cart
+  product_type?: string; // e.g. 'cup', 'tshirt'
+  customizable?: number | boolean;
 }
 
 export interface CartItem {
@@ -78,7 +83,7 @@ export interface Discount {
   target_name?: string;
   start_date: string | null;
   end_date: string | null;
-  active: number;
+  active: number | boolean;
   created_by: number | null;
   created_at: string;
   creator_name?: string;

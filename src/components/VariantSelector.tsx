@@ -6,7 +6,9 @@ type VariantType = 'size' | 'capacity' | 'dimensions';
 
 interface Variant {
     id: number;
-    type: VariantType;
+    product_id: number;
+    variant_type: VariantType;
+    variant_label: string;
     label: string;
     price: number;
     stock: number;
@@ -130,8 +132,8 @@ export default function VariantSelector({
                                 }`}
                         >
                             {variant.label}
-                            {variant.type === 'capacity' && ' oz'}
-                            {variant.type === 'dimensions' && ' cm'}
+                            {variant.variant_type === 'capacity' && ' oz'}
+                            {variant.variant_type === 'dimensions' && ' cm'}
                         </button>
                     ))}
                 </div>
@@ -168,8 +170,8 @@ export default function VariantSelector({
                     >
                         <span className={`font-medium ${!variant.in_stock ? 'line-through' : ''}`}>
                             {variant.label}
-                            {variant.type === 'capacity' && ' oz'}
-                            {variant.type === 'dimensions' && ' cm'}
+                            {variant.variant_type === 'capacity' && ' oz'}
+                            {variant.variant_type === 'dimensions' && ' cm'}
                         </span>
                         <span className={`block text-xs ${selectedVariantId === variant.id ? 'text-teal-600' : 'text-gray-500'
                             }`}>
