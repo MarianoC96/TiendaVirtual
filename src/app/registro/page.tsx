@@ -139,7 +139,10 @@ export default function RegisterPage() {
                 onChange={handlePhoneChange}
                 required
                 maxLength={15}
-                className={getInputClass('phone')}
+                className={`${getInputClass('phone')} ${phone.length > 0 && phone.length < 9
+                    ? '!border-red-500 !focus:ring-red-200 !focus:border-red-500 !bg-red-50'
+                    : ''
+                  }`}
                 placeholder="999888777"
               />
             </div>
