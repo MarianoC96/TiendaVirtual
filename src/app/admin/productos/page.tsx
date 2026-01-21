@@ -83,9 +83,9 @@ export default function AdminProductsPage() {
     swrOptions
   );
 
-  // SWR for categories with long cache
+  // SWR for categories with long cache (use admin API to get all categories including empty ones)
   const { data: categories = [] } = useSWR<Category[]>(
-    '/api/categories',
+    '/api/admin/categories',
     fetcher,
     {
       revalidateOnFocus: false,

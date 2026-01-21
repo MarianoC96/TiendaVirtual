@@ -109,7 +109,8 @@ export default function AdminCouponsPage() {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch('/api/categories');
+      // Use admin API to get all categories including empty ones
+      const res = await fetch('/api/admin/categories');
       const data = await res.json();
       setCategories(data);
     } catch (error) {

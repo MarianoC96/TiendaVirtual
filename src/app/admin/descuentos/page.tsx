@@ -102,7 +102,8 @@ export default function AdminDiscountsPage() {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch('/api/categories');
+      // Use admin API to get all categories including empty ones
+      const res = await fetch('/api/admin/categories');
       const data = await res.json();
       setCategories(data);
     } catch (error) {
@@ -559,10 +560,10 @@ export default function AdminDiscountsPage() {
                       </td>
                       <td className="px-6 py-4">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${!discount.active
-                            ? 'bg-gray-100 text-gray-600'
-                            : discount.is_active_now
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-amber-100 text-amber-700'
+                          ? 'bg-gray-100 text-gray-600'
+                          : discount.is_active_now
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-amber-100 text-amber-700'
                           }`}>
                           {!discount.active
                             ? 'Inactivo'
