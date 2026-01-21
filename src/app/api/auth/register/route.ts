@@ -10,6 +10,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Todos los campos son requeridos, incluido el teléfono' }, { status: 400 });
     }
 
+    // Prevent using reserved names
+    if (name.toLowerCase() === 'sadmin') {
+      return NextResponse.json({ error: 'El nombre de usuario no está permitido' }, { status: 400 });
+    }
+
     // Check if user exists
     const { data: existingUser } = await db
       .from('users')
