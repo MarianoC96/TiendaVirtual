@@ -132,10 +132,12 @@ export default function ProductDetailPage() {
     ? selectedVariant.in_stock
     : (typeof product.in_stock === 'number' ? product.in_stock === 1 : Boolean(product.in_stock)) && product.stock > 0;
 
+  // El precio que viene de la API ya tiene el descuento aplicado
+  // Para variantes, aplicamos el descuento del producto si existe
   const basePrice = selectedVariant ? selectedVariant.price : product.price;
-  const finalPrice = product.discount_percentage && product.discount_percentage > 0
-    ? basePrice * (1 - product.discount_percentage / 100)
-    : basePrice;
+  const finalPrice = selectedVariant && product.discount_percentage && product.discount_percentage > 0
+    ? selectedVariant.price * (1 - product.discount_percentage / 100)
+    : product.price; // product.price ya viene con descuento desde la API
 
   const inCartQuantity = getItemQuantity(product.id, selectedVariant?.id);
   const isCustomizable = product.customizable === 1;
@@ -307,9 +309,9 @@ export default function ProductDetailPage() {
                   </span>
                 )}
               </div>
-              {(product.discount_percentage || 0) > 0 && (
+              {(product.discount_percentage || 0) > 0 && product.original_price && (
                 <p className="text-green-600 font-medium">
-                  ¡Ahorras S/ {(basePrice - finalPrice).toFixed(2)}!
+                  ¡Ahorras S/ {(product.original_price - finalPrice).toFixed(2)}!
                 </p>
               )}
             </div>
