@@ -81,3 +81,55 @@ export async function PATCH(
         return NextResponse.json({ error: 'Error al actualizar usuario' }, { status: 500 });
     }
 }
+
+// DELETE: Delete user permanently
+export async function DELETE(
+    request: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const { id } = await params;
+        const userId = parseInt(id);
+
+        // Get user info first to check if it's SAdmin
+        const { data: user, error: fetchError } = await db
+            .from('users')
+            .select('name')
+            .eq('id', userId)
+            .single();
+
+        if (fetchError || !user) {
+            return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
+        }
+
+        // Protect SAdmin from being deleted
+        if (user.name === 'SAdmin') {
+            return NextResponse.json({ error: 'No se puede eliminar al usuario SAdmin' }, { status: 403 });
+        }
+
+        // Update foreign key references to NULL before deleting
+        await db.from('orders').update({ user_id: null }).eq('user_id', userId);
+        await db.from('coupons').update({ created_by: null }).eq('created_by', userId);
+        await db.from('coupons').update({ deactivated_by: null }).eq('deactivated_by', userId);
+        await db.from('discounts').update({ created_by: null }).eq('created_by', userId);
+        await db.from('categories').update({ created_by: null }).eq('created_by', userId);
+        await db.from('products').update({ created_by: null }).eq('created_by', userId);
+
+        // Delete worker permissions
+        await db.from('worker_permissions').delete().eq('user_id', userId);
+        await db.from('worker_permissions').delete().eq('granted_by', userId);
+
+        // Delete the user
+        const { error } = await db
+            .from('users')
+            .delete()
+            .eq('id', userId);
+
+        if (error) throw error;
+
+        return NextResponse.json({ success: true, message: 'Usuario eliminado correctamente' });
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        return NextResponse.json({ error: 'Error al eliminar usuario' }, { status: 500 });
+    }
+}

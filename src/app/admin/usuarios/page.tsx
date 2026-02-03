@@ -27,6 +27,10 @@ export default function UsuariosPage() {
     const [editForm, setEditForm] = useState({ name: '', email: '', role: '' });
     const [saving, setSaving] = useState(false);
 
+    // Delete modal state
+    const [deletingUser, setDeletingUser] = useState<User | null>(null);
+    const [deleting, setDeleting] = useState(false);
+
     // Redirect if not admin
     useEffect(() => {
         if (!loading && !isAdmin) {
@@ -117,6 +121,31 @@ export default function UsuariosPage() {
             }
         } catch (error) {
             console.error('Error toggling user status:', error);
+        }
+    };
+
+    // Delete user permanently
+    const handleDelete = async () => {
+        if (!deletingUser) return;
+        setDeleting(true);
+
+        try {
+            const res = await fetch(`/api/admin/users/${deletingUser.id}`, {
+                method: 'DELETE'
+            });
+
+            if (res.ok) {
+                setUsers(users.filter(u => u.id !== deletingUser.id));
+                setDeletingUser(null);
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Error al eliminar usuario');
+            }
+        } catch (error) {
+            console.error('Error deleting user:', error);
+            alert('Error al eliminar usuario');
+        } finally {
+            setDeleting(false);
         }
     };
 
@@ -271,6 +300,14 @@ export default function UsuariosPage() {
                                                         {user.active ? 'Deshabilitar' : 'Habilitar'}
                                                     </button>
                                                 )}
+                                                {user.name !== 'SAdmin' && (
+                                                    <button
+                                                        onClick={() => setDeletingUser(user)}
+                                                        className="px-3 py-1 text-red-600 hover:bg-red-50 rounded-lg text-sm cursor-pointer"
+                                                    >
+                                                        Eliminar
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -337,6 +374,46 @@ export default function UsuariosPage() {
                                 className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg disabled:opacity-50"
                             >
                                 {saving ? 'Guardando...' : 'Guardar'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {deletingUser && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/50" onClick={() => setDeletingUser(null)} />
+                    <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-900">Eliminar Usuario</h3>
+                                <p className="text-sm text-gray-500">Esta acción no se puede deshacer</p>
+                            </div>
+                        </div>
+
+                        <p className="text-gray-700 mb-6">
+                            ¿Estás seguro de que deseas eliminar permanentemente al usuario <span className="font-semibold">{deletingUser.name}</span> ({deletingUser.email})?
+                        </p>
+
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setDeletingUser(null)}
+                                className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleDelete}
+                                disabled={deleting}
+                                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg disabled:opacity-50"
+                            >
+                                {deleting ? 'Eliminando...' : 'Eliminar'}
                             </button>
                         </div>
                     </div>
